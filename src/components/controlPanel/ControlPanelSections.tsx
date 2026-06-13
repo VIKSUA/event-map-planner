@@ -4,6 +4,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DownloadIcon from "@mui/icons-material/Download";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import PrintIcon from "@mui/icons-material/Print";
@@ -12,6 +13,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import RemoveIcon from "@mui/icons-material/Remove";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
+import SaveIcon from "@mui/icons-material/Save";
 import { Box, Button, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
 import type { MapSettings, Orientation, PageFormat, ResolutionMode, Unit } from "../../types/map";
 import {
@@ -318,14 +320,18 @@ export function ExportSection({
 }
 
 export function StickyActionFooter({
+  onLoadSaved,
   onDownload,
   onPrint,
   onReset,
+  onSave,
   busy,
 }: {
+  onLoadSaved: () => void;
   onDownload: () => void;
   onPrint: () => void;
   onReset: () => void;
+  onSave: () => void;
   busy: boolean;
 }) {
   return (
@@ -343,6 +349,12 @@ export function StickyActionFooter({
       }}
     >
       <Stack direction="row" spacing={0.75}>
+        <Button size="small" variant="outlined" startIcon={<SaveIcon />} onClick={onSave}>
+          Save
+        </Button>
+        <Button size="small" variant="outlined" startIcon={<FolderOpenIcon />} onClick={onLoadSaved}>
+          Load
+        </Button>
         <Button size="small" variant="contained" startIcon={<DownloadIcon />} onClick={onDownload} disabled={busy}>
           PNG
         </Button>

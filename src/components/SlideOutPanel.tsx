@@ -32,7 +32,11 @@ export function SlideOutPanel({ children, defaultCollapsed = false, storageKey, 
       return;
     }
 
-    localStorage.setItem(storageKey, collapsed ? "collapsed" : "expanded");
+    try {
+      localStorage.setItem(storageKey, collapsed ? "collapsed" : "expanded");
+    } catch (error) {
+      console.warn("Unable to save overlay panel state.", error);
+    }
   }, [collapsed, storageKey]);
 
   return (

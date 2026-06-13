@@ -1,6 +1,17 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { useState } from "react";
+import { Alert, Box, Snackbar, Stack, Typography } from "@mui/material";
 import type { AppearanceSettings, MapSettings } from "../types/map";
 import { getDefaultAppearanceForMode, resetAppearanceMode, updateActiveAppearance } from "../lib/appearancePresets";
+import {
+  SavedLayoutsLimitError,
+  createSettingsFromSavedLayout,
+  deleteSavedLayout,
+  getSavedLayoutsStorageUsage,
+  isQuotaExceededError,
+  loadSavedLayouts,
+  saveCurrentLayout,
+  type SavedLayout,
+} from "../lib/savedLayouts";
 import {
   DEFAULT_GRID_OFFSET_X,
   DEFAULT_GRID_OFFSET_Y,
@@ -23,6 +34,7 @@ import {
   MIN_ZOOM,
 } from "../lib/mapConstants";
 import { getPrintSize, moveByMeters } from "../lib/mapMath";
+import { SavedLayoutsDialog } from "./SavedLayoutsDialog";
 import { ApiSourceSection, AppearanceSection, ExportSection, GridSection, LocationSection, StickyActionFooter, ViewSection } from "./controlPanel/ControlPanelSections";
 
 interface ControlPanelProps {
@@ -70,6 +82,16 @@ function isAppearanceKey(key: keyof MapSettings): key is keyof AppearanceSetting
 }
 
 export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset, requestCount, onResetRequestCount, busy }: ControlPanelProps) {
+  const [savedLayoutsOpen, setSavedLayoutsOpen] = useState(false);
+  const [savedLayouts, setSavedLayouts] = useState<SavedLayout[]>(() => loadSavedLayouts());
+  const [savedLayoutsStorageUsage, setSavedLayoutsStorageUsage] = useState(() => getSavedLayoutsStorageUsage());
+  const [message, setMessage] = useState<{ text: string; severity: "success" | "error" } | null>(null);
+
+  const refreshSavedLayouts = () => {
+    setSavedLayouts(loadSavedLayouts());
+    setSavedLayoutsStorageUsage(getSavedLayoutsStorageUsage());
+  };
+
   const update = <K extends keyof MapSettings>(key: K, value: MapSettings[K]) => {
     if (isAppearanceKey(key)) {
       onChange(updateActiveAppearance(settings, key, value as AppearanceSettings[typeof key]));
@@ -156,6 +178,44 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
       ),
     );
   };
+  const handleSaveLayout = () => {
+    try {
+      saveCurrentLayout(settings);
+      refreshSavedLayouts();
+      setMessage({ text: "Saved", severity: "success" });
+    } catch (error) {
+      const text =
+        error instanceof SavedLayoutsLimitError
+          ? error.message
+          : isQuotaExceededError(error)
+            ? "Not enough browser storage. Delete old saved layouts."
+            : "Unable to save map layout.";
+      setMessage({ text, severity: "error" });
+    }
+  };
+  const handleOpenSavedLayouts = () => {
+    refreshSavedLayouts();
+    setSavedLayoutsOpen(true);
+  };
+  const handleDeleteSavedLayout = (id: string) => {
+    if (!window.confirm("Delete this saved map?")) {
+      return;
+    }
+
+    try {
+      setSavedLayouts(deleteSavedLayout(id));
+      setSavedLayoutsStorageUsage(getSavedLayoutsStorageUsage());
+      setMessage({ text: "Deleted", severity: "success" });
+    } catch (error) {
+      const text = isQuotaExceededError(error) ? "Not enough browser storage. Delete old saved layouts." : "Unable to delete saved map.";
+      setMessage({ text, severity: "error" });
+    }
+  };
+  const handleLoadSavedLayout = (layout: SavedLayout) => {
+    onChange(createSettingsFromSavedLayout(layout, settings.apiKey));
+    setSavedLayoutsOpen(false);
+    setMessage({ text: "Loaded", severity: "success" });
+  };
 
   return (
     <Box component="form" onSubmit={(event) => event.preventDefault()}>
@@ -192,8 +252,30 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
           numberValue={numericValue}
           applyPrintPreset={applyPrintPreset}
         />
-        <StickyActionFooter onDownload={onDownload} onPrint={onPrint} onReset={onReset} busy={busy} />
+        <StickyActionFooter
+          onLoadSaved={handleOpenSavedLayouts}
+          onDownload={onDownload}
+          onPrint={onPrint}
+          onReset={onReset}
+          onSave={handleSaveLayout}
+          busy={busy}
+        />
       </Stack>
+      <SavedLayoutsDialog
+        layouts={savedLayouts}
+        onClose={() => setSavedLayoutsOpen(false)}
+        onDelete={handleDeleteSavedLayout}
+        onLoad={handleLoadSavedLayout}
+        open={savedLayoutsOpen}
+        storageUsageBytes={savedLayoutsStorageUsage}
+      />
+      <Snackbar open={Boolean(message)} autoHideDuration={3000} onClose={() => setMessage(null)}>
+        {message ? (
+          <Alert severity={message.severity} variant="filled" onClose={() => setMessage(null)}>
+            {message.text}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
     </Box>
   );
 }

@@ -35,7 +35,7 @@ function normalizeAppearance(appearance: AppearanceSettings): AppearanceSettings
   };
 }
 
-function normalizeSettings(settings: MapSettings): MapSettings {
+export function normalizeSettings(settings: MapSettings): MapSettings {
   const legacySettings = settings as MapSettings & { appearanceMode?: unknown };
   const activeAppearanceMode = isAppearanceMode(settings.activeAppearanceMode)
     ? settings.activeAppearanceMode
@@ -109,7 +109,11 @@ export function loadSettings(): MapSettings {
 }
 
 export function saveSettings(settings: MapSettings): void {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.warn("Unable to save map settings.", error);
+  }
 }
 
 export function loadPanelPosition(): PanelPosition {
@@ -126,5 +130,9 @@ export function loadPanelPosition(): PanelPosition {
 }
 
 export function savePanelPosition(position: PanelPosition): void {
-  localStorage.setItem(PANEL_KEY, JSON.stringify(position));
+  try {
+    localStorage.setItem(PANEL_KEY, JSON.stringify(position));
+  } catch (error) {
+    console.warn("Unable to save panel position.", error);
+  }
 }
