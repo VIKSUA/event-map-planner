@@ -14,6 +14,10 @@ interface DragStart {
   metersPerExportPixel: number;
 }
 
+interface PendingCommit {
+  source: MapSource;
+}
+
 interface UseMapDragPanProps {
   settings: MapSettings;
   source: MapSource | null;
@@ -26,11 +30,20 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<DragStart | null>(null);
+  const pendingCommitRef = useRef<PendingCommit | null>(null);
 
   useEffect(() => {
-    dragStartRef.current = null;
-    setDragOffset({ x: 0, y: 0 });
-    setIsDragging(false);
+    if (pendingCommitRef.current && source && source !== pendingCommitRef.current.source) {
+      pendingCommitRef.current = null;
+      setDragOffset({ x: 0, y: 0 });
+      setIsDragging(false);
+      return;
+    }
+
+    if (!pendingCommitRef.current && !dragStartRef.current) {
+      setDragOffset({ x: 0, y: 0 });
+      setIsDragging(false);
+    }
   }, [source]);
 
   const getExportDelta = useCallback((event: ReactPointerEvent<HTMLElement>, dragStart: DragStart) => {
@@ -43,7 +56,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
-      if (!source || event.button !== 0) {
+      if (!source || pendingCommitRef.current || event.button !== 0) {
         return;
       }
 
@@ -60,6 +73,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
         previewScale,
         metersPerExportPixel: metrics.effectiveMetersPerCanvasPixel,
       };
+      pendingCommitRef.current = null;
       setDragOffset({ x: 0, y: 0 });
       setIsDragging(true);
     },
@@ -88,7 +102,6 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
 
       const delta = getExportDelta(event, dragStart);
       dragStartRef.current = null;
-      setDragOffset({ x: 0, y: 0 });
       setIsDragging(false);
 
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -96,7 +109,14 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
       }
 
       if (!commit || (Math.abs(delta.x) < 0.5 && Math.abs(delta.y) < 0.5)) {
+        setDragOffset({ x: 0, y: 0 });
+        pendingCommitRef.current = null;
         return;
+      }
+
+      setDragOffset(delta);
+      if (source) {
+        pendingCommitRef.current = { source };
       }
 
       const next = moveCenterByScreenMeters(
@@ -108,7 +128,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
       );
       onPanEnd(Number(next.latitude.toFixed(7)), Number(next.longitude.toFixed(7)));
     },
-    [getExportDelta, onPanEnd],
+    [getExportDelta, onPanEnd, source],
   );
 
   const handlePointerUp = useCallback((event: ReactPointerEvent<HTMLElement>) => finishDrag(event, true), [finishDrag]);
@@ -117,6 +137,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
   return {
     dragOffset,
     isDragging,
+    isMapUpdatingAfterDrag: Boolean(pendingCommitRef.current),
     dragHandlers: {
       onPointerDown: handlePointerDown,
       onPointerMove: handlePointerMove,

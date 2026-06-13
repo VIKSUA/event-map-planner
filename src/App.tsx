@@ -68,7 +68,7 @@ export default function App() {
         if (cancelled) {
           return;
         }
-        setSource(null);
+        setSource((currentSource) => currentSource);
         setError(err instanceof Error ? err.message : "Unable to load map source.");
       })
       .finally(() => {

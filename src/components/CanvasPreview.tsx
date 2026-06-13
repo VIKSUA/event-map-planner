@@ -36,7 +36,13 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onPa
   const exportSize = getExportSize(settings);
   const previewScale = previewSize.width / exportSize.width;
   const gridMetrics = source ? getGridMetrics(settings, exportSize, source) : null;
-  const { dragOffset, isDragging, dragHandlers } = useMapDragPan({ settings, source, exportSize, previewScale, onPanEnd });
+  const { dragOffset, isDragging, isMapUpdatingAfterDrag, dragHandlers } = useMapDragPan({
+    settings,
+    source,
+    exportSize,
+    previewScale,
+    onPanEnd,
+  });
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -91,6 +97,7 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onPa
       </div>
       <div className="status-stack no-print">
         {loading && <div className="status">Loading Google Static Maps source...</div>}
+        {isMapUpdatingAfterDrag && <div className="status">Updating map...</div>}
         {error && <div className="status status-error">{error}</div>}
         {warnings.map((warning) => (
           <div className="status status-warning" key={warning}>{warning}</div>
