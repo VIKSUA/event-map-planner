@@ -1,15 +1,16 @@
 import type { ExportSize, MapRenderMetrics, MapSettings, MapSource, Orientation, PageFormat } from "../types/map";
+import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE, DEFAULT_ROTATION, DEFAULT_SCALE, DEFAULT_ZOOM } from "./mapConstants";
 
 const EARTH_CIRCUMFERENCE_METERS_PER_PIXEL = 156543.03392;
 const EARTH_RADIUS_METERS = 6378137;
 
 export const DEFAULT_SETTINGS: MapSettings = {
   apiKey: "",
-  latitude: 43.655463,
-  longitude: -79.587222,
-  zoom: 18,
-  rotation: 44,
-  scale: 165,
+  latitude: DEFAULT_LATITUDE,
+  longitude: DEFAULT_LONGITUDE,
+  zoom: DEFAULT_ZOOM,
+  rotation: DEFAULT_ROTATION,
+  scale: DEFAULT_SCALE,
   unit: "meters",
   smallGridMeters: 1,
   largeGridMeters: 10,

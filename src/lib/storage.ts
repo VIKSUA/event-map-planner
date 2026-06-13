@@ -1,8 +1,21 @@
 import type { MapSettings, PanelPosition } from "../types/map";
+import { MAX_SCALE, MAX_ZOOM, MIN_SCALE, MIN_ZOOM } from "./mapConstants";
 import { DEFAULT_SETTINGS } from "./mapMath";
 
 const SETTINGS_KEY = "map-background-exporter.settings";
 const PANEL_KEY = "map-background-exporter.panel";
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeSettings(settings: MapSettings): MapSettings {
+  return {
+    ...settings,
+    zoom: clamp(Math.round(settings.zoom), MIN_ZOOM, MAX_ZOOM),
+    scale: clamp(Math.round(settings.scale), MIN_SCALE, MAX_SCALE),
+  };
+}
 
 export function loadSettings(): MapSettings {
   try {
@@ -11,7 +24,7 @@ export function loadSettings(): MapSettings {
       return DEFAULT_SETTINGS;
     }
 
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } as MapSettings;
+    return normalizeSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(raw) } as MapSettings);
   } catch {
     return DEFAULT_SETTINGS;
   }

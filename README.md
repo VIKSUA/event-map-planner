@@ -90,6 +90,8 @@ High or Ultra mode may be needed for 4K and print exports because the final expo
 
 The grid is rendered directly into the final canvas after the map has been drawn. It does not rotate with the map and is not CSS-scaled, so lines stay sharp on high-DPI screens and in exported PNGs.
 
+Zoom input is clamped to Google's practical map zoom range of `0` through `22`. The panel also includes separate reset controls for zoom/scale, rotation, and all settings.
+
 ## Known Limitations
 
 - The API key is still visible in browser requests because there is no backend proxy in V1.
