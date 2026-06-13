@@ -92,6 +92,8 @@ The grid is rendered directly into the final canvas after the map has been drawn
 
 Zoom input is clamped to Google's practical map zoom range of `0` through `22`. The panel also includes separate reset controls for zoom/scale, rotation, and all settings.
 
+Grid controls include editable small/large line colors and line widths. These settings are rendered into preview, PNG export, and print output.
+
 ## Known Limitations
 
 - The API key is still visible in browser requests because there is no backend proxy in V1.

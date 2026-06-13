@@ -1,5 +1,5 @@
 import type { MapSettings, PanelPosition } from "../types/map";
-import { MAX_SCALE, MAX_ZOOM, MIN_SCALE, MIN_ZOOM } from "./mapConstants";
+import { MAX_GRID_LINE_WIDTH, MAX_SCALE, MAX_ZOOM, MIN_GRID_LINE_WIDTH, MIN_SCALE, MIN_ZOOM } from "./mapConstants";
 import { DEFAULT_SETTINGS } from "./mapMath";
 
 const SETTINGS_KEY = "map-background-exporter.settings";
@@ -14,6 +14,8 @@ function normalizeSettings(settings: MapSettings): MapSettings {
     ...settings,
     zoom: clamp(Math.round(settings.zoom), MIN_ZOOM, MAX_ZOOM),
     scale: clamp(Math.round(settings.scale), MIN_SCALE, MAX_SCALE),
+    smallGridLineWidth: clamp(Math.round(settings.smallGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),
+    largeGridLineWidth: clamp(Math.round(settings.largeGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),
   };
 }
 

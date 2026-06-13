@@ -17,6 +17,10 @@ export interface MapSettings {
   largeGridFeet: number;
   gridOffsetX: number;
   gridOffsetY: number;
+  smallGridColor: string;
+  largeGridColor: string;
+  smallGridLineWidth: number;
+  largeGridLineWidth: number;
   format: PageFormat;
   orientation: Orientation;
   exportWidth: number;

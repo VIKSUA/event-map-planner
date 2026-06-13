@@ -1,5 +1,15 @@
 import type { ExportSize, MapRenderMetrics, MapSettings, MapSource, Orientation, PageFormat } from "../types/map";
-import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE, DEFAULT_ROTATION, DEFAULT_SCALE, DEFAULT_ZOOM } from "./mapConstants";
+import {
+  DEFAULT_LARGE_GRID_COLOR,
+  DEFAULT_LARGE_GRID_LINE_WIDTH,
+  DEFAULT_LATITUDE,
+  DEFAULT_LONGITUDE,
+  DEFAULT_ROTATION,
+  DEFAULT_SCALE,
+  DEFAULT_SMALL_GRID_COLOR,
+  DEFAULT_SMALL_GRID_LINE_WIDTH,
+  DEFAULT_ZOOM,
+} from "./mapConstants";
 
 const EARTH_CIRCUMFERENCE_METERS_PER_PIXEL = 156543.03392;
 const EARTH_RADIUS_METERS = 6378137;
@@ -18,6 +28,10 @@ export const DEFAULT_SETTINGS: MapSettings = {
   largeGridFeet: 60,
   gridOffsetX: 0,
   gridOffsetY: 0,
+  smallGridColor: DEFAULT_SMALL_GRID_COLOR,
+  largeGridColor: DEFAULT_LARGE_GRID_COLOR,
+  smallGridLineWidth: DEFAULT_SMALL_GRID_LINE_WIDTH,
+  largeGridLineWidth: DEFAULT_LARGE_GRID_LINE_WIDTH,
   format: "letter",
   orientation: "portrait",
   exportWidth: 2000,

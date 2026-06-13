@@ -1,0 +1,218 @@
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import DownloadIcon from "@mui/icons-material/Download";
+import PrintIcon from "@mui/icons-material/Print";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import RemoveIcon from "@mui/icons-material/Remove";
+import RotateLeftIcon from "@mui/icons-material/RotateLeft";
+import RotateRightIcon from "@mui/icons-material/RotateRight";
+import { Button, FormControlLabel, Stack, Checkbox } from "@mui/material";
+import type { MapSettings, Orientation, PageFormat, ResolutionMode, Unit } from "../../types/map";
+import { MAX_GRID_LINE_WIDTH, MAX_SCALE, MAX_ZOOM, MIN_GRID_LINE_WIDTH, MIN_SCALE, MIN_ZOOM } from "../../lib/mapConstants";
+import {
+  CompactColorField,
+  CompactNumberField,
+  CompactSelectField,
+  CompactTextField,
+  FieldRow,
+  IconActionButton,
+  Section,
+} from "./ControlPanelFields";
+
+interface SharedSectionProps {
+  settings: MapSettings;
+  update: <K extends keyof MapSettings>(key: K, value: MapSettings[K]) => void;
+  numberValue: (value: string, fallback: number) => number;
+}
+
+export function ApiSourceSection({ settings, update }: SharedSectionProps) {
+  return (
+    <Section title="API / Source">
+      <CompactTextField label="Key" type="password" value={settings.apiKey} placeholder="Local only" onChange={(value) => update("apiKey", value)} />
+      <CompactSelectField<ResolutionMode>
+        label="Source"
+        value={settings.resolutionMode}
+        onChange={(value) => update("resolutionMode", value)}
+        options={[
+          { value: "standard", label: "Standard" },
+          { value: "high", label: "High 2x2" },
+          { value: "ultra", label: "Ultra 3x3" },
+        ]}
+      />
+    </Section>
+  );
+}
+
+export function LocationSection({
+  settings,
+  update,
+  numberValue,
+  nudge,
+}: SharedSectionProps & { nudge: (direction: "left" | "right" | "up" | "down") => void }) {
+  return (
+    <Section title="Location">
+      <CompactNumberField label="Lat" value={settings.latitude} step={0.000001} onChange={(value) => update("latitude", numberValue(value, settings.latitude))} />
+      <CompactNumberField label="Lng" value={settings.longitude} step={0.000001} onChange={(value) => update("longitude", numberValue(value, settings.longitude))} />
+      <FieldRow>
+        <IconActionButton title="Move left" icon={ArrowBackIcon} onClick={() => nudge("left")} />
+        <IconActionButton title="Move right" icon={ArrowForwardIcon} onClick={() => nudge("right")} />
+        <IconActionButton title="Move up" icon={ArrowUpwardIcon} onClick={() => nudge("up")} />
+        <IconActionButton title="Move down" icon={ArrowDownwardIcon} onClick={() => nudge("down")} />
+      </FieldRow>
+    </Section>
+  );
+}
+
+export function ViewSection({
+  settings,
+  updateZoom,
+  updateScale,
+  updateRotation,
+  resetZoomScale,
+  resetRotation,
+  numberValue,
+  canZoomOut,
+  canZoomIn,
+  canScaleOut,
+  canScaleIn,
+}: {
+  settings: MapSettings;
+  updateZoom: (value: number) => void;
+  updateScale: (value: number) => void;
+  updateRotation: (value: number) => void;
+  resetZoomScale: () => void;
+  resetRotation: () => void;
+  numberValue: (value: string, fallback: number) => number;
+  canZoomOut: boolean;
+  canZoomIn: boolean;
+  canScaleOut: boolean;
+  canScaleIn: boolean;
+}) {
+  const zoom = Math.round(settings.zoom);
+  const scale = Math.round(settings.scale);
+  return (
+    <Section title="View">
+      <FieldRow>
+        <CompactNumberField label="Zoom" value={zoom} min={MIN_ZOOM} max={MAX_ZOOM} step={1} helperText={`${MIN_ZOOM}-${MAX_ZOOM}`} onChange={(value) => updateZoom(numberValue(value, zoom))} />
+        <IconActionButton title="Zoom out" icon={RemoveIcon} disabled={!canZoomOut} onClick={() => updateZoom(zoom - 1)} />
+        <IconActionButton title="Zoom in" icon={AddIcon} disabled={!canZoomIn} onClick={() => updateZoom(zoom + 1)} />
+        <IconActionButton title="Reset zoom and scale" icon={RefreshIcon} onClick={resetZoomScale} />
+      </FieldRow>
+      <FieldRow>
+        <CompactNumberField label="Scale" value={scale} min={MIN_SCALE} max={MAX_SCALE} step={1} helperText={`${MIN_SCALE}-${MAX_SCALE}%`} onChange={(value) => updateScale(numberValue(value, scale))} />
+        <IconActionButton title="Scale down" icon={RemoveIcon} disabled={!canScaleOut} onClick={() => updateScale(scale - 5)} />
+        <IconActionButton title="Scale up" icon={AddIcon} disabled={!canScaleIn} onClick={() => updateScale(scale + 5)} />
+        <IconActionButton title="Reset zoom and scale" icon={RefreshIcon} onClick={resetZoomScale} />
+      </FieldRow>
+      <FieldRow>
+        <CompactNumberField label="Rot" value={settings.rotation} step={1} onChange={(value) => updateRotation(numberValue(value, settings.rotation))} />
+        <IconActionButton title="Rotate left" icon={RotateLeftIcon} onClick={() => updateRotation(settings.rotation - 1)} />
+        <IconActionButton title="Rotate right" icon={RotateRightIcon} onClick={() => updateRotation(settings.rotation + 1)} />
+        <IconActionButton title="Reset rotation" icon={RefreshIcon} onClick={resetRotation} />
+      </FieldRow>
+    </Section>
+  );
+}
+
+export function GridSection({ settings, update, numberValue }: SharedSectionProps) {
+  const smallValue = settings.unit === "meters" ? settings.smallGridMeters : settings.smallGridFeet;
+  const largeValue = settings.unit === "meters" ? settings.largeGridMeters : settings.largeGridFeet;
+  const smallKey = settings.unit === "meters" ? "smallGridMeters" : "smallGridFeet";
+  const largeKey = settings.unit === "meters" ? "largeGridMeters" : "largeGridFeet";
+
+  return (
+    <Section title="Grid">
+      <CompactSelectField<Unit>
+        label="Unit"
+        value={settings.unit}
+        onChange={(value) => update("unit", value)}
+        options={[
+          { value: "meters", label: "m" },
+          { value: "feet", label: "ft" },
+        ]}
+      />
+      <FormControlLabel
+        sx={{ m: 0, alignSelf: "center" }}
+        control={<Checkbox size="small" checked={settings.showGrid} onChange={(event) => update("showGrid", event.target.checked)} />}
+        label="Show"
+      />
+      <CompactNumberField label="Small" value={smallValue} min={settings.unit === "meters" ? 0.1 : 1} step={settings.unit === "meters" ? 0.1 : 1} onChange={(value) => update(smallKey, numberValue(value, smallValue))} />
+      <CompactNumberField label="Large" value={largeValue} min={settings.unit === "meters" ? 0.1 : 1} step={settings.unit === "meters" ? 0.1 : 1} onChange={(value) => update(largeKey, numberValue(value, largeValue))} />
+      <CompactNumberField label="Offset X" value={settings.gridOffsetX} step={1} onChange={(value) => update("gridOffsetX", numberValue(value, settings.gridOffsetX))} />
+      <CompactNumberField label="Offset Y" value={settings.gridOffsetY} step={1} onChange={(value) => update("gridOffsetY", numberValue(value, settings.gridOffsetY))} />
+      <CompactColorField label="Small color" value={settings.smallGridColor} onChange={(value) => update("smallGridColor", value)} />
+      <CompactColorField label="Large color" value={settings.largeGridColor} onChange={(value) => update("largeGridColor", value)} />
+      <CompactNumberField label="Small px" value={settings.smallGridLineWidth} min={MIN_GRID_LINE_WIDTH} max={MAX_GRID_LINE_WIDTH} step={1} onChange={(value) => update("smallGridLineWidth", numberValue(value, settings.smallGridLineWidth))} />
+      <CompactNumberField label="Large px" value={settings.largeGridLineWidth} min={MIN_GRID_LINE_WIDTH} max={MAX_GRID_LINE_WIDTH} step={1} onChange={(value) => update("largeGridLineWidth", numberValue(value, settings.largeGridLineWidth))} />
+      <CompactNumberField label="Opacity" value={settings.mapOpacity} min={0} max={100} step={1} onChange={(value) => update("mapOpacity", numberValue(value, settings.mapOpacity))} />
+    </Section>
+  );
+}
+
+export function ExportSection({
+  settings,
+  update,
+  numberValue,
+  applyPrintPreset,
+  onDownload,
+  onPrint,
+  onReset,
+  busy,
+}: SharedSectionProps & {
+  applyPrintPreset: () => void;
+  onDownload: () => void;
+  onPrint: () => void;
+  onReset: () => void;
+  busy: boolean;
+}) {
+  return (
+    <Section title="Export">
+      <CompactSelectField<PageFormat>
+        label="Format"
+        value={settings.format}
+        onChange={(value) => update("format", value)}
+        options={[
+          { value: "square", label: "Square" },
+          { value: "letter", label: "Letter" },
+          { value: "a4", label: "A4" },
+        ]}
+      />
+      <CompactSelectField<Orientation>
+        label="Orient"
+        value={settings.orientation}
+        disabled={settings.format === "square"}
+        onChange={(value) => update("orientation", value)}
+        options={[
+          { value: "portrait", label: "Portrait" },
+          { value: "landscape", label: "Landscape" },
+        ]}
+      />
+      <CompactNumberField label="Width" value={settings.exportWidth} min={640} step={10} onChange={(value) => update("exportWidth", numberValue(value, settings.exportWidth))} />
+      <Stack direction="row" spacing={0.5} sx={{ alignSelf: "center" }}>
+        <Button size="small" variant="outlined" onClick={() => update("exportWidth", 2000)}>
+          2K
+        </Button>
+        <Button size="small" variant="outlined" onClick={() => update("exportWidth", 3840)}>
+          4K
+        </Button>
+        <Button size="small" variant="outlined" onClick={applyPrintPreset} disabled={settings.format === "square"}>
+          DPI
+        </Button>
+      </Stack>
+      <Stack direction="row" spacing={0.75} sx={{ gridColumn: "1 / -1" }}>
+        <Button size="small" variant="contained" startIcon={<DownloadIcon />} onClick={onDownload} disabled={busy}>
+          PNG
+        </Button>
+        <Button size="small" variant="contained" startIcon={<PrintIcon />} onClick={onPrint} disabled={busy}>
+          Print
+        </Button>
+        <Button size="small" variant="text" startIcon={<RefreshIcon />} onClick={onReset}>
+          All
+        </Button>
+      </Stack>
+    </Section>
+  );
+}

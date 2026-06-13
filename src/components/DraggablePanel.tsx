@@ -1,5 +1,8 @@
 import type { PropsWithChildren } from "react";
 import { useEffect, useState } from "react";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { IconButton, Tooltip, Typography } from "@mui/material";
 import type { PanelPosition } from "../types/map";
 import { loadPanelPosition, savePanelPosition } from "../lib/storage";
 
@@ -51,10 +54,14 @@ export function DraggablePanel({ children, title }: DraggablePanelProps) {
           setDragStart({ pointerX: event.clientX, pointerY: event.clientY, panelX: position.x, panelY: position.y });
         }}
       >
-        <strong>{title}</strong>
-        <button type="button" onClick={() => setCollapsed((value) => !value)}>
-          {collapsed ? "Expand" : "Minimize"}
-        </button>
+        <Typography component="strong" sx={{ fontSize: 13 }}>
+          {title}
+        </Typography>
+        <Tooltip title={collapsed ? "Expand" : "Minimize"}>
+          <IconButton size="small" aria-label={collapsed ? "Expand panel" : "Minimize panel"} onClick={() => setCollapsed((value) => !value)}>
+            {collapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
       </div>
       {!collapsed && <div className="panel-body">{children}</div>}
     </aside>

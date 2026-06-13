@@ -20,41 +20,6 @@ body,
   margin: 0;
 }
 
-button,
-input,
-select {
-  font: inherit;
-}
-
-button {
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #f8fafc;
-  color: #0f172a;
-  cursor: pointer;
-  padding: 7px 10px;
-}
-
-button:hover:not(:disabled) {
-  background: #e0f2fe;
-  border-color: #38bdf8;
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-input,
-select {
-  width: 100%;
-  min-height: 32px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 5px 8px;
-  background: white;
-}
-
 .app {
   position: relative;
   width: 100%;
@@ -156,7 +121,7 @@ select {
   top: 0;
   left: 0;
   z-index: 10;
-  width: min(430px, calc(100vw - 24px));
+  width: min(360px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.6);
@@ -171,7 +136,7 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 6px 10px;
   border-bottom: 1px solid #e2e8f0;
   cursor: grab;
   user-select: none;
@@ -184,7 +149,7 @@ select {
 .panel-body {
   max-height: calc(100vh - 84px);
   overflow: auto;
-  padding: 14px;
+  padding: 0;
 }
 
 .export-meta {
@@ -194,89 +159,6 @@ select {
   color: #1e3a8a;
   padding: 9px 10px;
   font-weight: 600;
-}
-
-.settings-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.settings-grid label {
-  display: grid;
-  gap: 4px;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.control-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: rgba(248, 250, 252, 0.78);
-  padding: 10px;
-}
-
-.control-section h3 {
-  grid-column: 1 / -1;
-  margin: 0;
-  color: #0f172a;
-  font-size: 13px;
-  letter-spacing: 0.01em;
-}
-
-.span-2 {
-  grid-column: 1 / -1;
-}
-
-.field-hint {
-  color: #64748b;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.checkbox-label {
-  align-content: end;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  min-height: 54px;
-}
-
-.checkbox-label input {
-  width: auto;
-}
-
-.inline-control {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: end;
-  gap: 8px;
-}
-
-.button-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.primary-actions {
-  border-top: 1px solid #e2e8f0;
-  padding-top: 12px;
-}
-
-.primary-actions button:first-child,
-.primary-actions button:nth-child(2) {
-  border-color: #2563eb;
-  background: #2563eb;
-  color: white;
-}
-
-.primary-actions button:first-child:hover:not(:disabled),
-.primary-actions button:nth-child(2):hover:not(:disabled) {
-  background: #1d4ed8;
 }
 
 @media print {

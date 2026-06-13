@@ -10,6 +10,10 @@ function snapCoordinate(value: number, lineWidth: number): number {
   return lineWidth === 1 ? Math.round(value) + 0.5 : Math.round(value);
 }
 
+function normalizedLineWidth(value: number): number {
+  return Math.max(1, Math.round(value));
+}
+
 function drawGrid(
   context: CanvasRenderingContext2D,
   width: number,
@@ -52,8 +56,8 @@ function drawGrid(
     context.restore();
   };
 
-  drawLines(smallStep, 1, "rgba(8, 16, 32, 0.22)");
-  drawLines(largeStep, width > 2400 ? 2 : 1, "rgba(0, 80, 170, 0.72)");
+  drawLines(smallStep, normalizedLineWidth(settings.smallGridLineWidth), settings.smallGridColor);
+  drawLines(largeStep, normalizedLineWidth(settings.largeGridLineWidth), settings.largeGridColor);
 }
 
 export function drawComposition(
