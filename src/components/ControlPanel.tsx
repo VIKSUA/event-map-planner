@@ -1,6 +1,31 @@
 import { Box, Stack, Typography } from "@mui/material";
 import type { MapSettings } from "../types/map";
-import { DEFAULT_ROTATION, DEFAULT_SCALE, DEFAULT_ZOOM, MAX_SCALE, MAX_ZOOM, MIN_SCALE, MIN_ZOOM } from "../lib/mapConstants";
+import {
+  DEFAULT_GRID_OFFSET_X,
+  DEFAULT_GRID_OFFSET_Y,
+  DEFAULT_LARGE_GRID_COLOR,
+  DEFAULT_LARGE_GRID_FEET,
+  DEFAULT_LARGE_GRID_LINE_WIDTH,
+  DEFAULT_LARGE_GRID_METERS,
+  DEFAULT_LATITUDE,
+  DEFAULT_LONGITUDE,
+  DEFAULT_MAP_OPACITY,
+  DEFAULT_MOVE_STEP_METERS,
+  DEFAULT_RESOLUTION_MODE,
+  DEFAULT_ROTATION,
+  DEFAULT_SCALE,
+  DEFAULT_SHOW_GRID,
+  DEFAULT_SMALL_GRID_COLOR,
+  DEFAULT_SMALL_GRID_FEET,
+  DEFAULT_SMALL_GRID_LINE_WIDTH,
+  DEFAULT_SMALL_GRID_METERS,
+  DEFAULT_UNIT,
+  DEFAULT_ZOOM,
+  MAX_SCALE,
+  MAX_ZOOM,
+  MIN_SCALE,
+  MIN_ZOOM,
+} from "../lib/mapConstants";
 import { getPrintSize, moveByMeters } from "../lib/mapMath";
 import { ApiSourceSection, ExportSection, GridSection, LocationSection, ViewSection } from "./controlPanel/ControlPanelSections";
 
@@ -42,7 +67,7 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
   const canScaleIn = scale < MAX_SCALE;
 
   const nudge = (direction: "left" | "right" | "up" | "down") => {
-    const next = moveByMeters(settings.latitude, settings.longitude, direction, 1, settings.rotation);
+    const next = moveByMeters(settings.latitude, settings.longitude, direction, DEFAULT_MOVE_STEP_METERS, settings.rotation);
     onChange({
       ...settings,
       latitude: Number(next.latitude.toFixed(7)),
@@ -62,13 +87,32 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
   const updateRotation = (value: number) => update("rotation", Math.round(value));
   const resetZoomScale = () => onChange({ ...settings, zoom: DEFAULT_ZOOM, scale: DEFAULT_SCALE });
   const resetRotation = () => update("rotation", DEFAULT_ROTATION);
+  const resetSource = () => update("resolutionMode", DEFAULT_RESOLUTION_MODE);
+  const resetLocation = () => onChange({ ...settings, latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE });
+  const resetGrid = () =>
+    onChange({
+      ...settings,
+      unit: DEFAULT_UNIT,
+      smallGridMeters: DEFAULT_SMALL_GRID_METERS,
+      largeGridMeters: DEFAULT_LARGE_GRID_METERS,
+      smallGridFeet: DEFAULT_SMALL_GRID_FEET,
+      largeGridFeet: DEFAULT_LARGE_GRID_FEET,
+      gridOffsetX: DEFAULT_GRID_OFFSET_X,
+      gridOffsetY: DEFAULT_GRID_OFFSET_Y,
+      smallGridColor: DEFAULT_SMALL_GRID_COLOR,
+      largeGridColor: DEFAULT_LARGE_GRID_COLOR,
+      smallGridLineWidth: DEFAULT_SMALL_GRID_LINE_WIDTH,
+      largeGridLineWidth: DEFAULT_LARGE_GRID_LINE_WIDTH,
+      mapOpacity: DEFAULT_MAP_OPACITY,
+      showGrid: DEFAULT_SHOW_GRID,
+    });
 
   return (
     <Box component="form" onSubmit={(event) => event.preventDefault()}>
       <Stack spacing={0}>
         <Typography sx={{ px: 1, pb: 0.5, fontSize: 12, color: "text.secondary" }}>Export controls</Typography>
-        <ApiSourceSection settings={settings} update={update} numberValue={numericValue} />
-        <LocationSection settings={settings} update={update} numberValue={numericValue} nudge={nudge} />
+        <ApiSourceSection settings={settings} update={update} numberValue={numericValue} resetSource={resetSource} />
+        <LocationSection settings={settings} update={update} numberValue={numericValue} nudge={nudge} resetLocation={resetLocation} />
         <ViewSection
           settings={{ ...settings, zoom, scale }}
           updateZoom={updateZoom}
@@ -82,7 +126,7 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
           canScaleOut={canScaleOut}
           canScaleIn={canScaleIn}
         />
-        <GridSection settings={settings} update={update} numberValue={numericValue} />
+        <GridSection settings={settings} update={update} numberValue={numericValue} resetGrid={resetGrid} />
         <ExportSection
           settings={settings}
           update={update}

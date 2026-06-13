@@ -28,9 +28,9 @@ interface SharedSectionProps {
   numberValue: (value: string, fallback: number) => number;
 }
 
-export function ApiSourceSection({ settings, update }: SharedSectionProps) {
+export function ApiSourceSection({ settings, update, resetSource }: SharedSectionProps & { resetSource: () => void }) {
   return (
-    <Section title="API / Source">
+    <Section title="API / Source" action={<IconActionButton title="Reset source settings" icon={RefreshIcon} onClick={resetSource} />}>
       <CompactTextField label="Key" type="password" value={settings.apiKey} placeholder="Local only" onChange={(value) => update("apiKey", value)} />
       <CompactSelectField<ResolutionMode>
         label="Source"
@@ -51,9 +51,10 @@ export function LocationSection({
   update,
   numberValue,
   nudge,
-}: SharedSectionProps & { nudge: (direction: "left" | "right" | "up" | "down") => void }) {
+  resetLocation,
+}: SharedSectionProps & { nudge: (direction: "left" | "right" | "up" | "down") => void; resetLocation: () => void }) {
   return (
-    <Section title="Location">
+    <Section title="Location" action={<IconActionButton title="Reset location" icon={RefreshIcon} onClick={resetLocation} />}>
       <CompactNumberField label="Lat" value={settings.latitude} step={0.000001} onChange={(value) => update("latitude", numberValue(value, settings.latitude))} />
       <CompactNumberField label="Lng" value={settings.longitude} step={0.000001} onChange={(value) => update("longitude", numberValue(value, settings.longitude))} />
       <FieldRow>
@@ -117,14 +118,14 @@ export function ViewSection({
   );
 }
 
-export function GridSection({ settings, update, numberValue }: SharedSectionProps) {
+export function GridSection({ settings, update, numberValue, resetGrid }: SharedSectionProps & { resetGrid: () => void }) {
   const smallValue = settings.unit === "meters" ? settings.smallGridMeters : settings.smallGridFeet;
   const largeValue = settings.unit === "meters" ? settings.largeGridMeters : settings.largeGridFeet;
   const smallKey = settings.unit === "meters" ? "smallGridMeters" : "smallGridFeet";
   const largeKey = settings.unit === "meters" ? "largeGridMeters" : "largeGridFeet";
 
   return (
-    <Section title="Grid">
+    <Section title="Grid" action={<IconActionButton title="Reset grid" icon={RefreshIcon} onClick={resetGrid} />}>
       <CompactSelectField<Unit>
         label="Unit"
         value={settings.unit}
@@ -209,9 +210,7 @@ export function ExportSection({
         <Button size="small" variant="contained" startIcon={<PrintIcon />} onClick={onPrint} disabled={busy}>
           Print
         </Button>
-        <Button size="small" variant="text" startIcon={<RefreshIcon />} onClick={onReset}>
-          All
-        </Button>
+        <IconActionButton title="Reset all settings" icon={RefreshIcon} onClick={onReset} />
       </Stack>
     </Section>
   );

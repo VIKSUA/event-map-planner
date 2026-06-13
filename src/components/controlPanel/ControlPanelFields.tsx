@@ -4,7 +4,7 @@ import type { SelectChangeEvent } from "@mui/material/Select";
 
 export const COMPACT_ICON_SIZE = 30;
 
-export function Section({ title, children }: { title: string; children: ReactNode }) {
+export function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <Box
       component="section"
@@ -18,12 +18,12 @@ export function Section({ title, children }: { title: string; children: ReactNod
         borderColor: "divider",
       }}
     >
-      <Typography
-        component="h3"
-        sx={{ gridColumn: "1 / -1", fontSize: 11, fontWeight: 700, color: "text.secondary", textTransform: "uppercase", letterSpacing: 0.4 }}
-      >
-        {title}
-      </Typography>
+      <Stack direction="row" sx={{ gridColumn: "1 / -1", alignItems: "center", justifyContent: "space-between", minHeight: 30 }}>
+        <Typography component="h3" sx={{ fontSize: 11, fontWeight: 700, color: "text.secondary", textTransform: "uppercase", letterSpacing: 0.4 }}>
+          {title}
+        </Typography>
+        {action}
+      </Stack>
       {children}
     </Box>
   );

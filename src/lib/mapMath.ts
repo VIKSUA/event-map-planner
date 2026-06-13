@@ -1,13 +1,23 @@
 import type { ExportSize, MapRenderMetrics, MapSettings, MapSource, Orientation, PageFormat } from "../types/map";
 import {
   DEFAULT_LARGE_GRID_COLOR,
+  DEFAULT_LARGE_GRID_FEET,
   DEFAULT_LARGE_GRID_LINE_WIDTH,
+  DEFAULT_LARGE_GRID_METERS,
+  DEFAULT_GRID_OFFSET_X,
+  DEFAULT_GRID_OFFSET_Y,
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
+  DEFAULT_MAP_OPACITY,
+  DEFAULT_RESOLUTION_MODE,
   DEFAULT_ROTATION,
   DEFAULT_SCALE,
   DEFAULT_SMALL_GRID_COLOR,
+  DEFAULT_SMALL_GRID_FEET,
   DEFAULT_SMALL_GRID_LINE_WIDTH,
+  DEFAULT_SMALL_GRID_METERS,
+  DEFAULT_SHOW_GRID,
+  DEFAULT_UNIT,
   DEFAULT_ZOOM,
 } from "./mapConstants";
 
@@ -21,13 +31,13 @@ export const DEFAULT_SETTINGS: MapSettings = {
   zoom: DEFAULT_ZOOM,
   rotation: DEFAULT_ROTATION,
   scale: DEFAULT_SCALE,
-  unit: "meters",
-  smallGridMeters: 1,
-  largeGridMeters: 10,
-  smallGridFeet: 12,
-  largeGridFeet: 60,
-  gridOffsetX: 0,
-  gridOffsetY: 0,
+  unit: DEFAULT_UNIT,
+  smallGridMeters: DEFAULT_SMALL_GRID_METERS,
+  largeGridMeters: DEFAULT_LARGE_GRID_METERS,
+  smallGridFeet: DEFAULT_SMALL_GRID_FEET,
+  largeGridFeet: DEFAULT_LARGE_GRID_FEET,
+  gridOffsetX: DEFAULT_GRID_OFFSET_X,
+  gridOffsetY: DEFAULT_GRID_OFFSET_Y,
   smallGridColor: DEFAULT_SMALL_GRID_COLOR,
   largeGridColor: DEFAULT_LARGE_GRID_COLOR,
   smallGridLineWidth: DEFAULT_SMALL_GRID_LINE_WIDTH,
@@ -35,9 +45,9 @@ export const DEFAULT_SETTINGS: MapSettings = {
   format: "letter",
   orientation: "portrait",
   exportWidth: 2000,
-  mapOpacity: 100,
-  showGrid: true,
-  resolutionMode: "standard",
+  mapOpacity: DEFAULT_MAP_OPACITY,
+  showGrid: DEFAULT_SHOW_GRID,
+  resolutionMode: DEFAULT_RESOLUTION_MODE,
 };
 
 export function feetToMeters(feet: number): number {
@@ -137,22 +147,20 @@ export function moveByMeters(
   rotationDegrees: number,
 ): { latitude: number; longitude: number } {
   const rotation = (rotationDegrees * Math.PI) / 180;
-  let eastMeters = 0;
-  let northMeters = 0;
+  const screenDelta =
+    direction === "left"
+      ? { x: -meters, y: 0 }
+      : direction === "right"
+        ? { x: meters, y: 0 }
+        : direction === "up"
+          ? { x: 0, y: -meters }
+          : { x: 0, y: meters };
 
-  if (direction === "left") {
-    eastMeters = -Math.cos(rotation) * meters;
-    northMeters = Math.sin(rotation) * meters;
-  } else if (direction === "right") {
-    eastMeters = Math.cos(rotation) * meters;
-    northMeters = -Math.sin(rotation) * meters;
-  } else if (direction === "up") {
-    eastMeters = Math.sin(rotation) * meters;
-    northMeters = Math.cos(rotation) * meters;
-  } else {
-    eastMeters = -Math.sin(rotation) * meters;
-    northMeters = -Math.cos(rotation) * meters;
-  }
+  // The button describes desired image movement on screen; map center moves opposite in map axes.
+  const unrotatedImageX = screenDelta.x * Math.cos(rotation) + screenDelta.y * Math.sin(rotation);
+  const unrotatedImageY = -screenDelta.x * Math.sin(rotation) + screenDelta.y * Math.cos(rotation);
+  const eastMeters = -unrotatedImageX;
+  const northMeters = unrotatedImageY;
 
   const latitudeRadians = (latitude * Math.PI) / 180;
   const nextLatitude = latitude + (northMeters / EARTH_RADIUS_METERS) * (180 / Math.PI);
