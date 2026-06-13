@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, Box, Snackbar, Stack, Typography } from "@mui/material";
 import type { AppearanceSettings, MapSettings } from "../types/map";
 import { getDefaultAppearanceForMode, resetAppearanceMode, updateActiveAppearance } from "../lib/appearancePresets";
@@ -44,6 +44,7 @@ interface ControlPanelProps {
   onPrint: () => void;
   onReset: () => void;
   requestCount: number;
+  onAddRequests: (amount: number) => void;
   onResetRequestCount: () => void;
   busy: boolean;
 }
@@ -81,11 +82,22 @@ function isAppearanceKey(key: keyof MapSettings): key is keyof AppearanceSetting
   return APPEARANCE_KEYS.has(key as keyof AppearanceSettings);
 }
 
-export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset, requestCount, onResetRequestCount, busy }: ControlPanelProps) {
+export function ControlPanel({
+  settings,
+  onChange,
+  onDownload,
+  onPrint,
+  onReset,
+  requestCount,
+  onAddRequests,
+  onResetRequestCount,
+  busy,
+}: ControlPanelProps) {
   const [savedLayoutsOpen, setSavedLayoutsOpen] = useState(false);
   const [savedLayouts, setSavedLayouts] = useState<SavedLayout[]>(() => loadSavedLayouts());
   const [savedLayoutsStorageUsage, setSavedLayoutsStorageUsage] = useState(() => getSavedLayoutsStorageUsage());
   const [message, setMessage] = useState<{ text: string; severity: "success" | "error" } | null>(null);
+  const handleThumbnailRequestStart = useCallback(() => onAddRequests(1), [onAddRequests]);
 
   const refreshSavedLayouts = () => {
     setSavedLayouts(loadSavedLayouts());
@@ -267,6 +279,9 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
         onDelete={handleDeleteSavedLayout}
         onLoad={handleLoadSavedLayout}
         open={savedLayoutsOpen}
+        apiKey={settings.apiKey}
+        googleRequestCount={requestCount}
+        onThumbnailRequestStart={handleThumbnailRequestStart}
         storageUsageBytes={savedLayoutsStorageUsage}
       />
       <Snackbar open={Boolean(message)} autoHideDuration={3000} onClose={() => setMessage(null)}>

@@ -12,17 +12,23 @@ function formatUsage(bytes: number): string {
 }
 
 export function SavedLayoutsDialog({
+  apiKey,
+  googleRequestCount,
   layouts,
   onClose,
   onDelete,
   onLoad,
+  onThumbnailRequestStart,
   open,
   storageUsageBytes,
 }: {
+  apiKey: string;
+  googleRequestCount: number;
   layouts: SavedLayout[];
   onClose: () => void;
   onDelete: (id: string) => void;
   onLoad: (layout: SavedLayout) => void;
+  onThumbnailRequestStart: () => void;
   open: boolean;
   storageUsageBytes: number;
 }) {
@@ -33,7 +39,9 @@ export function SavedLayoutsDialog({
           <Typography component="h2" sx={{ flex: 1, fontWeight: 700 }}>
             Saved maps
           </Typography>
-          <Typography sx={{ mr: 2, color: "text.secondary", fontSize: 13 }}>Storage: {formatUsage(storageUsageBytes)}</Typography>
+          <Typography sx={{ mr: 2, color: "text.secondary", fontSize: 13 }}>
+            Storage: {formatUsage(storageUsageBytes)} · Google API: {googleRequestCount} {googleRequestCount === 1 ? "request" : "requests"}
+          </Typography>
           <IconButton edge="end" aria-label="Close saved maps" onClick={onClose}>
             <CloseIcon />
           </IconButton>
@@ -54,7 +62,14 @@ export function SavedLayoutsDialog({
             }}
           >
             {layouts.map((layout) => (
-              <SavedLayoutListItem key={layout.id} layout={layout} onDelete={onDelete} onLoad={onLoad} />
+              <SavedLayoutListItem
+                key={layout.id}
+                apiKey={apiKey}
+                layout={layout}
+                onDelete={onDelete}
+                onLoad={onLoad}
+                onThumbnailRequestStart={onThumbnailRequestStart}
+              />
             ))}
           </Box>
         )}

@@ -143,6 +143,7 @@ export default function App() {
           onPrint={handlePrint}
           onReset={() => setSettings(DEFAULT_SETTINGS)}
           requestCount={requestCount}
+          onAddRequests={addRequests}
           onResetRequestCount={resetRequests}
           busy={loading}
         />

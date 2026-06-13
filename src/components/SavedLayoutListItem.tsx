@@ -8,13 +8,17 @@ function formatDate(value: string): string {
 }
 
 export function SavedLayoutListItem({
+  apiKey,
   layout,
   onDelete,
   onLoad,
+  onThumbnailRequestStart,
 }: {
+  apiKey: string;
   layout: SavedLayout;
   onDelete: (id: string) => void;
   onLoad: (layout: SavedLayout) => void;
+  onThumbnailRequestStart: () => void;
 }) {
   const settings = layout.settings;
   const modeLabel = settings.activeAppearanceMode === "printBw" ? "B/W" : "Screen";
@@ -23,7 +27,7 @@ export function SavedLayoutListItem({
     <Card variant="outlined" sx={{ height: "100%" }}>
       <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ height: "100%", alignItems: { xs: "stretch", sm: "center" } }}>
-          <SavedLayoutThumbnail layout={layout} />
+          <SavedLayoutThumbnail apiKey={apiKey} layout={layout} onRequestStart={onThumbnailRequestStart} />
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography component="h3" sx={{ fontWeight: 700, fontSize: 15, lineHeight: 1.25 }}>
               {layout.name}
