@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -8,9 +8,10 @@ import { loadPanelPosition, savePanelPosition } from "../lib/storage";
 
 interface DraggablePanelProps extends PropsWithChildren {
   title: string;
+  headerAction?: ReactNode;
 }
 
-export function DraggablePanel({ children, title }: DraggablePanelProps) {
+export function DraggablePanel({ children, headerAction, title }: DraggablePanelProps) {
   const [position, setPosition] = useState<PanelPosition>(() => loadPanelPosition());
   const [collapsed, setCollapsed] = useState(false);
   const [dragStart, setDragStart] = useState<{ pointerX: number; pointerY: number; panelX: number; panelY: number } | null>(null);
@@ -54,14 +55,19 @@ export function DraggablePanel({ children, title }: DraggablePanelProps) {
           setDragStart({ pointerX: event.clientX, pointerY: event.clientY, panelX: position.x, panelY: position.y });
         }}
       >
-        <Typography component="strong" sx={{ fontSize: 13 }}>
-          {title}
-        </Typography>
-        <Tooltip title={collapsed ? "Expand" : "Minimize"}>
-          <IconButton size="small" aria-label={collapsed ? "Expand panel" : "Minimize panel"} onClick={() => setCollapsed((value) => !value)}>
-            {collapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
+        <div className="panel-title-main">
+          <Typography component="strong" sx={{ fontSize: 13 }}>
+            {title}
+          </Typography>
+        </div>
+        <div className="panel-title-actions">
+          {headerAction}
+          <Tooltip title={collapsed ? "Expand" : "Minimize"}>
+            <IconButton size="small" aria-label={collapsed ? "Expand panel" : "Minimize panel"} onClick={() => setCollapsed((value) => !value)}>
+              {collapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        </div>
       </div>
       {!collapsed && <div className="panel-body">{children}</div>}
     </aside>

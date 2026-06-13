@@ -2,6 +2,7 @@ export type Unit = "meters" | "feet";
 export type PageFormat = "square" | "letter" | "a4";
 export type Orientation = "portrait" | "landscape";
 export type ResolutionMode = "standard" | "high" | "ultra";
+export type AppearanceMode = "screen" | "printBw";
 
 export interface MapSettings {
   apiKey: string;
@@ -22,6 +23,11 @@ export interface MapSettings {
   largeGridColor: string;
   smallGridLineWidth: number;
   largeGridLineWidth: number;
+  appearanceMode: AppearanceMode;
+  mapGrayscale: boolean;
+  mapBrightness: number;
+  mapContrast: number;
+  mapSaturation: number;
   format: PageFormat;
   orientation: Orientation;
   exportWidth: number;

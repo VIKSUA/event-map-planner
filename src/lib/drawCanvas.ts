@@ -18,6 +18,15 @@ function normalizedLineWidth(value: number): number {
   return Math.max(1, Math.round(value));
 }
 
+function mapFilter(settings: MapSettings): string {
+  return [
+    `grayscale(${settings.mapGrayscale ? 100 : 0}%)`,
+    `brightness(${Math.max(0, settings.mapBrightness)}%)`,
+    `contrast(${Math.max(0, settings.mapContrast)}%)`,
+    `saturate(${Math.max(0, settings.mapSaturation)}%)`,
+  ].join(" ");
+}
+
 function drawGrid(
   context: CanvasRenderingContext2D,
   width: number,
@@ -85,6 +94,7 @@ export function drawComposition(
 
   context.save();
   context.globalAlpha = Math.max(0, Math.min(100, settings.mapOpacity)) / 100;
+  context.filter = mapFilter(settings);
   context.translate(width / 2 + (options.mapOffset?.x ?? 0), height / 2 + (options.mapOffset?.y ?? 0));
   context.rotate((settings.rotation * Math.PI) / 180);
   context.drawImage(source.image, -mapDrawSize / 2, -mapDrawSize / 2, mapDrawSize, mapDrawSize);

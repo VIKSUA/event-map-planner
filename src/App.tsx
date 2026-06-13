@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { CanvasPreview } from "./components/CanvasPreview";
 import { ControlPanel } from "./components/ControlPanel";
 import { DraggablePanel } from "./components/DraggablePanel";
+import { MapModeToggle } from "./components/MapModeToggle";
+import { applyAppearancePreset } from "./lib/appearancePresets";
 import { downloadPng } from "./lib/download";
 import { fetchMapSource } from "./lib/googleStaticMap";
 import { getRequestCostByResolutionMode, useGoogleRequestCounter } from "./lib/googleRequestCounter";
@@ -122,7 +124,15 @@ export default function App() {
   return (
     <div className="app">
       <CanvasPreview settings={settings} source={source} loading={loading} error={error} warnings={displayWarnings} onPanEnd={handlePanEnd} />
-      <DraggablePanel title="Map controls">
+      <DraggablePanel
+        title="Map controls"
+        headerAction={
+          <MapModeToggle
+            value={settings.appearanceMode}
+            onChange={(mode) => setSettings((currentSettings) => applyAppearancePreset(currentSettings, mode))}
+          />
+        }
+      >
         <div className="export-meta">
           Export: {exportSize.width} x {exportSize.height}px
         </div>

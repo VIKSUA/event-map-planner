@@ -12,9 +12,18 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import RemoveIcon from "@mui/icons-material/Remove";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
-import { Button, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Stack, Tooltip, Typography } from "@mui/material";
 import type { MapSettings, Orientation, PageFormat, ResolutionMode, Unit } from "../../types/map";
-import { MAX_GRID_LINE_WIDTH, MAX_SCALE, MAX_ZOOM, MIN_GRID_LINE_WIDTH, MIN_SCALE, MIN_ZOOM } from "../../lib/mapConstants";
+import {
+  MAX_GRID_LINE_WIDTH,
+  MAX_MAP_FILTER_PERCENT,
+  MAX_SCALE,
+  MAX_ZOOM,
+  MIN_GRID_LINE_WIDTH,
+  MIN_MAP_FILTER_PERCENT,
+  MIN_SCALE,
+  MIN_ZOOM,
+} from "../../lib/mapConstants";
 import {
   CompactColorField,
   CompactNumberField,
@@ -205,7 +214,57 @@ export function GridSection({ settings, update, numberValue, resetGrid }: Shared
       <CompactColorField label="Large color" value={settings.largeGridColor} onChange={(value) => update("largeGridColor", value)} />
       <CompactNumberField label="Small px" value={settings.smallGridLineWidth} min={MIN_GRID_LINE_WIDTH} max={MAX_GRID_LINE_WIDTH} step={1} onChange={(value) => update("smallGridLineWidth", numberValue(value, settings.smallGridLineWidth))} />
       <CompactNumberField label="Large px" value={settings.largeGridLineWidth} min={MIN_GRID_LINE_WIDTH} max={MAX_GRID_LINE_WIDTH} step={1} onChange={(value) => update("largeGridLineWidth", numberValue(value, settings.largeGridLineWidth))} />
-      <CompactNumberField label="Opacity" value={settings.mapOpacity} min={0} max={100} step={1} onChange={(value) => update("mapOpacity", numberValue(value, settings.mapOpacity))} />
+    </Section>
+  );
+}
+
+export function AppearanceSection({ settings, update, numberValue }: SharedSectionProps) {
+  return (
+    <Section title="Appearance">
+      <FormControlLabel
+        sx={{ m: 0, alignSelf: "center" }}
+        control={<Checkbox size="small" checked={settings.mapGrayscale} onChange={(event) => update("mapGrayscale", event.target.checked)} />}
+        label="B/W"
+      />
+      <Tooltip title="Print presets lighten the map for easier printing.">
+        <Typography sx={{ alignSelf: "center", color: "text.secondary", fontSize: 11 }}>Print presets</Typography>
+      </Tooltip>
+      <CompactNumberField
+        label="Brightness"
+        value={settings.mapBrightness}
+        min={MIN_MAP_FILTER_PERCENT}
+        max={MAX_MAP_FILTER_PERCENT}
+        step={5}
+        helperText="%"
+        onChange={(value) => update("mapBrightness", numberValue(value, settings.mapBrightness))}
+      />
+      <CompactNumberField
+        label="Contrast"
+        value={settings.mapContrast}
+        min={MIN_MAP_FILTER_PERCENT}
+        max={MAX_MAP_FILTER_PERCENT}
+        step={5}
+        helperText="%"
+        onChange={(value) => update("mapContrast", numberValue(value, settings.mapContrast))}
+      />
+      <CompactNumberField
+        label="Saturation"
+        value={settings.mapSaturation}
+        min={MIN_MAP_FILTER_PERCENT}
+        max={MAX_MAP_FILTER_PERCENT}
+        step={5}
+        helperText="%"
+        onChange={(value) => update("mapSaturation", numberValue(value, settings.mapSaturation))}
+      />
+      <CompactNumberField
+        label="Opacity"
+        value={settings.mapOpacity}
+        min={MIN_MAP_FILTER_PERCENT}
+        max={100}
+        step={5}
+        helperText="%"
+        onChange={(value) => update("mapOpacity", numberValue(value, settings.mapOpacity))}
+      />
     </Section>
   );
 }
@@ -215,16 +274,8 @@ export function ExportSection({
   update,
   numberValue,
   applyPrintPreset,
-  onDownload,
-  onPrint,
-  onReset,
-  busy,
 }: SharedSectionProps & {
   applyPrintPreset: () => void;
-  onDownload: () => void;
-  onPrint: () => void;
-  onReset: () => void;
-  busy: boolean;
 }) {
   return (
     <Section title="Export">
@@ -260,7 +311,36 @@ export function ExportSection({
           DPI
         </Button>
       </Stack>
-      <Stack direction="row" spacing={0.75} sx={{ gridColumn: "1 / -1" }}>
+    </Section>
+  );
+}
+
+export function StickyActionFooter({
+  onDownload,
+  onPrint,
+  onReset,
+  busy,
+}: {
+  onDownload: () => void;
+  onPrint: () => void;
+  onReset: () => void;
+  busy: boolean;
+}) {
+  return (
+    <Box
+      sx={{
+        position: "sticky",
+        bottom: 0,
+        zIndex: 2,
+        borderTop: "1px solid",
+        borderColor: "divider",
+        backgroundColor: "rgba(255, 255, 255, 0.96)",
+        backdropFilter: "blur(12px)",
+        px: 0.75,
+        py: 0.75,
+      }}
+    >
+      <Stack direction="row" spacing={0.75}>
         <Button size="small" variant="contained" startIcon={<DownloadIcon />} onClick={onDownload} disabled={busy}>
           PNG
         </Button>
@@ -269,6 +349,6 @@ export function ExportSection({
         </Button>
         <IconActionButton title="Reset all settings" icon={RefreshIcon} onClick={onReset} />
       </Stack>
-    </Section>
+    </Box>
   );
 }

@@ -149,6 +149,18 @@ body,
   user-select: none;
 }
 
+.panel-title-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.panel-title-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
 .panel-title:active {
   cursor: grabbing;
 }

@@ -27,7 +27,15 @@ import {
   MIN_ZOOM,
 } from "../lib/mapConstants";
 import { getPrintSize, moveByMeters } from "../lib/mapMath";
-import { ApiSourceSection, ExportSection, GridSection, LocationSection, ViewSection } from "./controlPanel/ControlPanelSections";
+import {
+  ApiSourceSection,
+  AppearanceSection,
+  ExportSection,
+  GridSection,
+  LocationSection,
+  StickyActionFooter,
+  ViewSection,
+} from "./controlPanel/ControlPanelSections";
 
 interface ControlPanelProps {
   settings: MapSettings;
@@ -150,17 +158,15 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
           canScaleOut={canScaleOut}
           canScaleIn={canScaleIn}
         />
+        <AppearanceSection settings={settings} update={update} numberValue={numericValue} />
         <GridSection settings={settings} update={update} numberValue={numericValue} resetGrid={resetGrid} />
         <ExportSection
           settings={settings}
           update={update}
           numberValue={numericValue}
           applyPrintPreset={applyPrintPreset}
-          onDownload={onDownload}
-          onPrint={onPrint}
-          onReset={onReset}
-          busy={busy}
         />
+        <StickyActionFooter onDownload={onDownload} onPrint={onPrint} onReset={onReset} busy={busy} />
       </Stack>
     </Box>
   );
