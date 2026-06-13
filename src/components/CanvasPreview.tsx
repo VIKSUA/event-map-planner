@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ExportSize, MapSettings, MapSource } from "../types/map";
 import { drawComposition } from "../lib/drawCanvas";
 import { getExportSize, getGridMetrics } from "../lib/mapMath";
+import { SlideOutPanel } from "./SlideOutPanel";
 import { useMapDragPan } from "./useMapDragPan";
 
 interface CanvasPreviewProps {
@@ -43,6 +44,12 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onPa
     previewScale,
     onPanEnd,
   });
+  const statusItems = [
+    loading ? { kind: "default", text: "Loading Google Static Maps source..." } : null,
+    isMapUpdatingAfterDrag ? { kind: "default", text: "Updating map..." } : null,
+    error ? { kind: "error", text: error } : null,
+    ...warnings.map((warning) => ({ kind: "warning", text: warning })),
+  ].filter((item): item is { kind: string; text: string } => Boolean(item));
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -95,14 +102,20 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onPa
           </div>
         )}
       </div>
-      <div className="status-stack no-print">
-        {loading && <div className="status">Loading Google Static Maps source...</div>}
-        {isMapUpdatingAfterDrag && <div className="status">Updating map...</div>}
-        {error && <div className="status status-error">{error}</div>}
-        {warnings.map((warning) => (
-          <div className="status status-warning" key={warning}>{warning}</div>
-        ))}
-        {gridMetrics && (
+      {statusItems.length > 0 && (
+        <SlideOutPanel storageKey="map-background-exporter.status-panel" top={16} width={360}>
+          <div className="status-stack">
+            {statusItems.map((item) => (
+              <div className={`status ${item.kind === "error" ? "status-error" : item.kind === "warning" ? "status-warning" : ""}`} key={`${item.kind}-${item.text}`}>
+                {item.text}
+              </div>
+            ))}
+          </div>
+        </SlideOutPanel>
+      )}
+
+      {gridMetrics && (
+        <SlideOutPanel storageKey="map-background-exporter.debug-panel" defaultCollapsed top={160} width={340}>
           <div className="status debug-metrics">
             <strong>Grid debug</strong>
             <span>export: {exportSize.width} x {exportSize.height}px</span>
@@ -121,8 +134,8 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onPa
             <span>largeStep: {formatMetric(gridMetrics.largeGridStepPx)}px</span>
             <span>unit: {settings.unit}</span>
           </div>
-        )}
-      </div>
+        </SlideOutPanel>
+      )}
     </main>
   );
 }

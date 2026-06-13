@@ -81,12 +81,8 @@ body,
 }
 
 .status-stack {
-  position: absolute;
-  right: 16px;
-  bottom: 16px;
   display: grid;
   gap: 8px;
-  max-width: min(520px, calc(100vw - 32px));
 }
 
 .status {
