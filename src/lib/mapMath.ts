@@ -146,7 +146,6 @@ export function moveByMeters(
   meters: number,
   rotationDegrees: number,
 ): { latitude: number; longitude: number } {
-  const rotation = (rotationDegrees * Math.PI) / 180;
   const screenDelta =
     direction === "left"
       ? { x: -meters, y: 0 }
@@ -156,9 +155,21 @@ export function moveByMeters(
           ? { x: 0, y: -meters }
           : { x: 0, y: meters };
 
+  return moveCenterByScreenMeters(latitude, longitude, screenDelta.x, screenDelta.y, rotationDegrees);
+}
+
+export function moveCenterByScreenMeters(
+  latitude: number,
+  longitude: number,
+  screenDxMeters: number,
+  screenDyMeters: number,
+  rotationDegrees: number,
+): { latitude: number; longitude: number } {
+  const rotation = (rotationDegrees * Math.PI) / 180;
+
   // The button describes desired image movement on screen; map center moves opposite in map axes.
-  const unrotatedImageX = screenDelta.x * Math.cos(rotation) + screenDelta.y * Math.sin(rotation);
-  const unrotatedImageY = -screenDelta.x * Math.sin(rotation) + screenDelta.y * Math.cos(rotation);
+  const unrotatedImageX = screenDxMeters * Math.cos(rotation) + screenDyMeters * Math.sin(rotation);
+  const unrotatedImageY = -screenDxMeters * Math.sin(rotation) + screenDyMeters * Math.cos(rotation);
   const eastMeters = -unrotatedImageX;
   const northMeters = unrotatedImageY;
 

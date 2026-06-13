@@ -6,6 +6,10 @@ export interface RenderResult {
   warnings: string[];
 }
 
+export interface DrawCompositionOptions {
+  mapOffset?: { x: number; y: number };
+}
+
 function snapCoordinate(value: number, lineWidth: number): number {
   return lineWidth === 1 ? Math.round(value) + 0.5 : Math.round(value);
 }
@@ -65,6 +69,7 @@ export function drawComposition(
   size: ExportSize,
   settings: MapSettings,
   source: MapSource,
+  options: DrawCompositionOptions = {},
 ): string[] {
   const warnings = [...source.warnings];
   const { width, height } = size;
@@ -80,7 +85,7 @@ export function drawComposition(
 
   context.save();
   context.globalAlpha = Math.max(0, Math.min(100, settings.mapOpacity)) / 100;
-  context.translate(width / 2, height / 2);
+  context.translate(width / 2 + (options.mapOffset?.x ?? 0), height / 2 + (options.mapOffset?.y ?? 0));
   context.rotate((settings.rotation * Math.PI) / 180);
   context.drawImage(source.image, -mapDrawSize / 2, -mapDrawSize / 2, mapDrawSize, mapDrawSize);
   context.restore();

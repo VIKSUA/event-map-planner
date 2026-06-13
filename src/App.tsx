@@ -112,9 +112,13 @@ export default function App() {
     }
   };
 
+  const handlePanEnd = (latitude: number, longitude: number) => {
+    setSettings((currentSettings) => ({ ...currentSettings, latitude, longitude }));
+  };
+
   return (
     <div className="app">
-      <CanvasPreview settings={settings} source={source} loading={loading} error={error} warnings={displayWarnings} />
+      <CanvasPreview settings={settings} source={source} loading={loading} error={error} warnings={displayWarnings} onPanEnd={handlePanEnd} />
       <DraggablePanel title="Map controls">
         <div className="export-meta">
           Export: {exportSize.width} x {exportSize.height}px

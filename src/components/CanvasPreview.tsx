@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ExportSize, MapSettings, MapSource } from "../types/map";
 import { drawComposition } from "../lib/drawCanvas";
 import { getExportSize, getGridMetrics } from "../lib/mapMath";
+import { useMapDragPan } from "./useMapDragPan";
 
 interface CanvasPreviewProps {
   settings: MapSettings;
@@ -9,6 +10,7 @@ interface CanvasPreviewProps {
   loading: boolean;
   error: string | null;
   warnings: string[];
+  onPanEnd: (latitude: number, longitude: number) => void;
 }
 
 function fitSize(containerWidth: number, containerHeight: number, exportSize: ExportSize): ExportSize {
@@ -27,13 +29,14 @@ function formatMetric(value: number): string {
   return Number.isFinite(value) ? value.toFixed(3) : "n/a";
 }
 
-export function CanvasPreview({ settings, source, loading, error, warnings }: CanvasPreviewProps) {
+export function CanvasPreview({ settings, source, loading, error, warnings, onPanEnd }: CanvasPreviewProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [previewSize, setPreviewSize] = useState<ExportSize>({ width: 800, height: 800 });
   const exportSize = getExportSize(settings);
   const previewScale = previewSize.width / exportSize.width;
   const gridMetrics = source ? getGridMetrics(settings, exportSize, source) : null;
+  const { dragOffset, isDragging, dragHandlers } = useMapDragPan({ settings, source, exportSize, previewScale, onPanEnd });
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -67,12 +70,17 @@ export function CanvasPreview({ settings, source, loading, error, warnings }: Ca
     }
 
     context.setTransform(previewScale * dpr, 0, 0, previewScale * dpr, 0, 0);
-    drawComposition(context, exportSize, settings, source);
-  }, [exportSize, previewScale, previewSize, settings, source]);
+    drawComposition(context, exportSize, settings, source, { mapOffset: dragOffset });
+  }, [dragOffset, exportSize, previewScale, previewSize, settings, source]);
 
   return (
     <main ref={wrapperRef} className="preview-shell">
-      <div className="canvas-card" style={{ width: previewSize.width, height: previewSize.height }}>
+      <div
+        className={`canvas-card ${isDragging ? "is-dragging" : ""}`}
+        style={{ width: previewSize.width, height: previewSize.height }}
+        title="Drag map to move"
+        {...dragHandlers}
+      >
         <canvas ref={canvasRef} aria-label="Map export preview" />
         {!source && (
           <div className="preview-placeholder">
