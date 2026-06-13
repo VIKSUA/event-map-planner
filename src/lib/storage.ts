@@ -1,4 +1,4 @@
-import type { MapSettings, PanelPosition } from "../types/map";
+import type { AppearanceMode, AppearanceSettings, MapSettings, PanelPosition } from "../types/map";
 import {
   MAX_GRID_LINE_WIDTH,
   MAX_MAP_FILTER_PERCENT,
@@ -9,6 +9,7 @@ import {
   MIN_SCALE,
   MIN_ZOOM,
 } from "./mapConstants";
+import { DEFAULT_APPEARANCE_BY_MODE, applyActiveAppearance } from "./appearancePresets";
 import { DEFAULT_SETTINGS } from "./mapMath";
 
 const SETTINGS_KEY = "map-background-exporter.settings";
@@ -18,9 +19,69 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function normalizeSettings(settings: MapSettings): MapSettings {
+function isAppearanceMode(value: unknown): value is AppearanceMode {
+  return value === "screen" || value === "printBw";
+}
+
+function normalizeAppearance(appearance: AppearanceSettings): AppearanceSettings {
   return {
+    ...appearance,
+    smallGridLineWidth: clamp(Math.round(appearance.smallGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),
+    largeGridLineWidth: clamp(Math.round(appearance.largeGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),
+    mapBrightness: clamp(Math.round(appearance.mapBrightness), MIN_MAP_FILTER_PERCENT, MAX_MAP_FILTER_PERCENT),
+    mapContrast: clamp(Math.round(appearance.mapContrast), MIN_MAP_FILTER_PERCENT, MAX_MAP_FILTER_PERCENT),
+    mapSaturation: clamp(Math.round(appearance.mapSaturation), MIN_MAP_FILTER_PERCENT, MAX_MAP_FILTER_PERCENT),
+    mapOpacity: clamp(Math.round(appearance.mapOpacity), MIN_MAP_FILTER_PERCENT, 100),
+  };
+}
+
+function normalizeSettings(settings: MapSettings): MapSettings {
+  const legacySettings = settings as MapSettings & { appearanceMode?: unknown };
+  const activeAppearanceMode = isAppearanceMode(settings.activeAppearanceMode)
+    ? settings.activeAppearanceMode
+    : isAppearanceMode(legacySettings.appearanceMode)
+      ? legacySettings.appearanceMode
+      : DEFAULT_SETTINGS.activeAppearanceMode;
+  const appearanceByMode = {
+    screen: normalizeAppearance({
+      ...DEFAULT_APPEARANCE_BY_MODE.screen,
+      ...settings.appearanceByMode?.screen,
+      ...(activeAppearanceMode === "screen"
+        ? {
+            mapGrayscale: settings.mapGrayscale,
+            mapBrightness: settings.mapBrightness,
+            mapContrast: settings.mapContrast,
+            mapSaturation: settings.mapSaturation,
+            mapOpacity: settings.mapOpacity,
+            smallGridColor: settings.smallGridColor,
+            largeGridColor: settings.largeGridColor,
+            smallGridLineWidth: settings.smallGridLineWidth,
+            largeGridLineWidth: settings.largeGridLineWidth,
+          }
+        : {}),
+    }),
+    printBw: normalizeAppearance({
+      ...DEFAULT_APPEARANCE_BY_MODE.printBw,
+      ...settings.appearanceByMode?.printBw,
+      ...(activeAppearanceMode === "printBw"
+        ? {
+            mapGrayscale: settings.mapGrayscale,
+            mapBrightness: settings.mapBrightness,
+            mapContrast: settings.mapContrast,
+            mapSaturation: settings.mapSaturation,
+            mapOpacity: settings.mapOpacity,
+            smallGridColor: settings.smallGridColor,
+            largeGridColor: settings.largeGridColor,
+            smallGridLineWidth: settings.smallGridLineWidth,
+            largeGridLineWidth: settings.largeGridLineWidth,
+          }
+        : {}),
+    }),
+  };
+  const normalized = {
     ...settings,
+    activeAppearanceMode,
+    appearanceByMode,
     zoom: clamp(Math.round(settings.zoom), MIN_ZOOM, MAX_ZOOM),
     scale: clamp(Math.round(settings.scale), MIN_SCALE, MAX_SCALE),
     smallGridLineWidth: clamp(Math.round(settings.smallGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),
@@ -30,6 +91,8 @@ function normalizeSettings(settings: MapSettings): MapSettings {
     mapSaturation: clamp(Math.round(settings.mapSaturation), MIN_MAP_FILTER_PERCENT, MAX_MAP_FILTER_PERCENT),
     mapOpacity: clamp(Math.round(settings.mapOpacity), MIN_MAP_FILTER_PERCENT, 100),
   };
+
+  return applyActiveAppearance(normalized, appearanceByMode[activeAppearanceMode]);
 }
 
 export function loadSettings(): MapSettings {

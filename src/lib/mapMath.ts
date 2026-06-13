@@ -1,4 +1,5 @@
 import type { ExportSize, MapRenderMetrics, MapSettings, MapSource, Orientation, PageFormat } from "../types/map";
+import { DEFAULT_APPEARANCE_BY_MODE } from "./appearancePresets";
 import {
   DEFAULT_APPEARANCE_MODE,
   DEFAULT_LARGE_GRID_COLOR,
@@ -49,7 +50,8 @@ export const DEFAULT_SETTINGS: MapSettings = {
   largeGridColor: DEFAULT_LARGE_GRID_COLOR,
   smallGridLineWidth: DEFAULT_SMALL_GRID_LINE_WIDTH,
   largeGridLineWidth: DEFAULT_LARGE_GRID_LINE_WIDTH,
-  appearanceMode: DEFAULT_APPEARANCE_MODE,
+  activeAppearanceMode: DEFAULT_APPEARANCE_MODE,
+  appearanceByMode: DEFAULT_APPEARANCE_BY_MODE,
   mapGrayscale: DEFAULT_MAP_GRAYSCALE,
   mapBrightness: DEFAULT_MAP_BRIGHTNESS,
   mapContrast: DEFAULT_MAP_CONTRAST,

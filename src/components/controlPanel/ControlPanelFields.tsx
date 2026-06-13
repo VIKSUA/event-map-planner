@@ -1,5 +1,5 @@
 import type { ElementType, ReactNode } from "react";
-import { Box, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { Box, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Select, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
 
 export const COMPACT_ICON_SIZE = 30;
@@ -57,6 +57,7 @@ export function CompactNumberField({
   step,
   helperText,
   disabled,
+  endAdornment,
 }: {
   label: string;
   value: number;
@@ -66,6 +67,7 @@ export function CompactNumberField({
   step?: number;
   helperText?: string;
   disabled?: boolean;
+  endAdornment?: string;
 }) {
   return (
     <TextField
@@ -77,7 +79,10 @@ export function CompactNumberField({
       helperText={helperText}
       disabled={disabled}
       fullWidth
-      slotProps={{ htmlInput: { min, max, step } }}
+      slotProps={{
+        htmlInput: { min, max, step },
+        input: endAdornment ? { endAdornment: <InputAdornment position="end">{endAdornment}</InputAdornment> } : undefined,
+      }}
     />
   );
 }

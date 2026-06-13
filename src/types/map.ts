@@ -4,6 +4,18 @@ export type Orientation = "portrait" | "landscape";
 export type ResolutionMode = "standard" | "high" | "ultra";
 export type AppearanceMode = "screen" | "printBw";
 
+export interface AppearanceSettings {
+  mapGrayscale: boolean;
+  mapBrightness: number;
+  mapContrast: number;
+  mapSaturation: number;
+  mapOpacity: number;
+  smallGridColor: string;
+  largeGridColor: string;
+  smallGridLineWidth: number;
+  largeGridLineWidth: number;
+}
+
 export interface MapSettings {
   apiKey: string;
   latitude: number;
@@ -23,7 +35,8 @@ export interface MapSettings {
   largeGridColor: string;
   smallGridLineWidth: number;
   largeGridLineWidth: number;
-  appearanceMode: AppearanceMode;
+  activeAppearanceMode: AppearanceMode;
+  appearanceByMode: Record<AppearanceMode, AppearanceSettings>;
   mapGrayscale: boolean;
   mapBrightness: number;
   mapContrast: number;

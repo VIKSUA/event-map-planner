@@ -3,7 +3,7 @@ import { CanvasPreview } from "./components/CanvasPreview";
 import { ControlPanel } from "./components/ControlPanel";
 import { DraggablePanel } from "./components/DraggablePanel";
 import { MapModeToggle } from "./components/MapModeToggle";
-import { applyAppearancePreset } from "./lib/appearancePresets";
+import { setAppearanceMode } from "./lib/appearancePresets";
 import { downloadPng } from "./lib/download";
 import { fetchMapSource } from "./lib/googleStaticMap";
 import { getRequestCostByResolutionMode, useGoogleRequestCounter } from "./lib/googleRequestCounter";
@@ -128,8 +128,8 @@ export default function App() {
         title="Map controls"
         headerAction={
           <MapModeToggle
-            value={settings.appearanceMode}
-            onChange={(mode) => setSettings((currentSettings) => applyAppearancePreset(currentSettings, mode))}
+            value={settings.activeAppearanceMode}
+            onChange={(mode) => setSettings((currentSettings) => setAppearanceMode(currentSettings, mode))}
           />
         }
       >

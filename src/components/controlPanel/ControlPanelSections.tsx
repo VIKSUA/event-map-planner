@@ -12,7 +12,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import RemoveIcon from "@mui/icons-material/Remove";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
-import { Box, Button, Checkbox, FormControlLabel, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
 import type { MapSettings, Orientation, PageFormat, ResolutionMode, Unit } from "../../types/map";
 import {
   MAX_GRID_LINE_WIDTH,
@@ -218,24 +218,26 @@ export function GridSection({ settings, update, numberValue, resetGrid }: Shared
   );
 }
 
-export function AppearanceSection({ settings, update, numberValue }: SharedSectionProps) {
+export function AppearanceSection({
+  settings,
+  update,
+  numberValue,
+  resetAppearance,
+}: SharedSectionProps & { resetAppearance: () => void }) {
   return (
-    <Section title="Appearance">
+    <Section title="Appearance" action={<IconActionButton title="Reset current appearance mode" icon={RefreshIcon} onClick={resetAppearance} />}>
       <FormControlLabel
         sx={{ m: 0, alignSelf: "center" }}
         control={<Checkbox size="small" checked={settings.mapGrayscale} onChange={(event) => update("mapGrayscale", event.target.checked)} />}
         label="B/W"
       />
-      <Tooltip title="Print presets lighten the map for easier printing.">
-        <Typography sx={{ alignSelf: "center", color: "text.secondary", fontSize: 11 }}>Print presets</Typography>
-      </Tooltip>
       <CompactNumberField
         label="Brightness"
         value={settings.mapBrightness}
         min={MIN_MAP_FILTER_PERCENT}
         max={MAX_MAP_FILTER_PERCENT}
         step={5}
-        helperText="%"
+        endAdornment="%"
         onChange={(value) => update("mapBrightness", numberValue(value, settings.mapBrightness))}
       />
       <CompactNumberField
@@ -244,7 +246,7 @@ export function AppearanceSection({ settings, update, numberValue }: SharedSecti
         min={MIN_MAP_FILTER_PERCENT}
         max={MAX_MAP_FILTER_PERCENT}
         step={5}
-        helperText="%"
+        endAdornment="%"
         onChange={(value) => update("mapContrast", numberValue(value, settings.mapContrast))}
       />
       <CompactNumberField
@@ -253,7 +255,7 @@ export function AppearanceSection({ settings, update, numberValue }: SharedSecti
         min={MIN_MAP_FILTER_PERCENT}
         max={MAX_MAP_FILTER_PERCENT}
         step={5}
-        helperText="%"
+        endAdornment="%"
         onChange={(value) => update("mapSaturation", numberValue(value, settings.mapSaturation))}
       />
       <CompactNumberField
@@ -262,7 +264,7 @@ export function AppearanceSection({ settings, update, numberValue }: SharedSecti
         min={MIN_MAP_FILTER_PERCENT}
         max={100}
         step={5}
-        helperText="%"
+        endAdornment="%"
         onChange={(value) => update("mapOpacity", numberValue(value, settings.mapOpacity))}
       />
     </Section>

@@ -1,23 +1,19 @@
 import { Box, Stack, Typography } from "@mui/material";
-import type { MapSettings } from "../types/map";
+import type { AppearanceSettings, MapSettings } from "../types/map";
+import { getDefaultAppearanceForMode, resetAppearanceMode, updateActiveAppearance } from "../lib/appearancePresets";
 import {
   DEFAULT_GRID_OFFSET_X,
   DEFAULT_GRID_OFFSET_Y,
-  DEFAULT_LARGE_GRID_COLOR,
   DEFAULT_LARGE_GRID_FEET,
-  DEFAULT_LARGE_GRID_LINE_WIDTH,
   DEFAULT_LARGE_GRID_METERS,
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
-  DEFAULT_MAP_OPACITY,
   DEFAULT_MOVE_STEP_METERS,
   DEFAULT_RESOLUTION_MODE,
   DEFAULT_ROTATION,
   DEFAULT_SCALE,
   DEFAULT_SHOW_GRID,
-  DEFAULT_SMALL_GRID_COLOR,
   DEFAULT_SMALL_GRID_FEET,
-  DEFAULT_SMALL_GRID_LINE_WIDTH,
   DEFAULT_SMALL_GRID_METERS,
   DEFAULT_UNIT,
   DEFAULT_ZOOM,
@@ -27,15 +23,7 @@ import {
   MIN_ZOOM,
 } from "../lib/mapConstants";
 import { getPrintSize, moveByMeters } from "../lib/mapMath";
-import {
-  ApiSourceSection,
-  AppearanceSection,
-  ExportSection,
-  GridSection,
-  LocationSection,
-  StickyActionFooter,
-  ViewSection,
-} from "./controlPanel/ControlPanelSections";
+import { ApiSourceSection, AppearanceSection, ExportSection, GridSection, LocationSection, StickyActionFooter, ViewSection } from "./controlPanel/ControlPanelSections";
 
 interface ControlPanelProps {
   settings: MapSettings;
@@ -65,8 +53,29 @@ function clampScale(value: number): number {
   return clamp(Math.round(value), MIN_SCALE, MAX_SCALE);
 }
 
+const APPEARANCE_KEYS: ReadonlySet<keyof AppearanceSettings> = new Set([
+  "mapGrayscale",
+  "mapBrightness",
+  "mapContrast",
+  "mapSaturation",
+  "mapOpacity",
+  "smallGridColor",
+  "largeGridColor",
+  "smallGridLineWidth",
+  "largeGridLineWidth",
+]);
+
+function isAppearanceKey(key: keyof MapSettings): key is keyof AppearanceSettings {
+  return APPEARANCE_KEYS.has(key as keyof AppearanceSettings);
+}
+
 export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset, requestCount, onResetRequestCount, busy }: ControlPanelProps) {
   const update = <K extends keyof MapSettings>(key: K, value: MapSettings[K]) => {
+    if (isAppearanceKey(key)) {
+      onChange(updateActiveAppearance(settings, key, value as AppearanceSettings[typeof key]));
+      return;
+    }
+
     onChange({ ...settings, [key]: value });
   };
   const zoom = clampZoom(settings.zoom);
@@ -113,23 +122,40 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
   const toggleZoomScaleLock = () => update("isZoomScaleLocked", !settings.isZoomScaleLocked);
   const resetSource = () => update("resolutionMode", DEFAULT_RESOLUTION_MODE);
   const resetLocation = () => onChange({ ...settings, latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE });
-  const resetGrid = () =>
-    onChange({
-      ...settings,
-      unit: DEFAULT_UNIT,
-      smallGridMeters: DEFAULT_SMALL_GRID_METERS,
-      largeGridMeters: DEFAULT_LARGE_GRID_METERS,
-      smallGridFeet: DEFAULT_SMALL_GRID_FEET,
-      largeGridFeet: DEFAULT_LARGE_GRID_FEET,
-      gridOffsetX: DEFAULT_GRID_OFFSET_X,
-      gridOffsetY: DEFAULT_GRID_OFFSET_Y,
-      smallGridColor: DEFAULT_SMALL_GRID_COLOR,
-      largeGridColor: DEFAULT_LARGE_GRID_COLOR,
-      smallGridLineWidth: DEFAULT_SMALL_GRID_LINE_WIDTH,
-      largeGridLineWidth: DEFAULT_LARGE_GRID_LINE_WIDTH,
-      mapOpacity: DEFAULT_MAP_OPACITY,
-      showGrid: DEFAULT_SHOW_GRID,
-    });
+  const resetAppearance = () => onChange(resetAppearanceMode(settings));
+  const resetGrid = () => {
+    const defaultAppearance = getDefaultAppearanceForMode(settings.activeAppearanceMode);
+
+    onChange(
+      updateActiveAppearance(
+        updateActiveAppearance(
+          updateActiveAppearance(
+            updateActiveAppearance(
+              {
+                ...settings,
+                unit: DEFAULT_UNIT,
+                smallGridMeters: DEFAULT_SMALL_GRID_METERS,
+                largeGridMeters: DEFAULT_LARGE_GRID_METERS,
+                smallGridFeet: DEFAULT_SMALL_GRID_FEET,
+                largeGridFeet: DEFAULT_LARGE_GRID_FEET,
+                gridOffsetX: DEFAULT_GRID_OFFSET_X,
+                gridOffsetY: DEFAULT_GRID_OFFSET_Y,
+                showGrid: DEFAULT_SHOW_GRID,
+              },
+              "smallGridColor",
+              defaultAppearance.smallGridColor,
+            ),
+            "largeGridColor",
+            defaultAppearance.largeGridColor,
+          ),
+          "smallGridLineWidth",
+          defaultAppearance.smallGridLineWidth,
+        ),
+        "largeGridLineWidth",
+        defaultAppearance.largeGridLineWidth,
+      ),
+    );
+  };
 
   return (
     <Box component="form" onSubmit={(event) => event.preventDefault()}>
@@ -158,7 +184,7 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
           canScaleOut={canScaleOut}
           canScaleIn={canScaleIn}
         />
-        <AppearanceSection settings={settings} update={update} numberValue={numericValue} />
+        <AppearanceSection settings={settings} update={update} numberValue={numericValue} resetAppearance={resetAppearance} />
         <GridSection settings={settings} update={update} numberValue={numericValue} resetGrid={resetGrid} />
         <ExportSection
           settings={settings}

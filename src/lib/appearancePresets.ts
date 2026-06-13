@@ -1,21 +1,7 @@
-import type { AppearanceMode, MapSettings } from "../types/map";
+import type { AppearanceMode, AppearanceSettings, MapSettings } from "../types/map";
 
-export interface AppearancePreset {
-  mode: AppearanceMode;
-  mapGrayscale: boolean;
-  mapBrightness: number;
-  mapContrast: number;
-  mapSaturation: number;
-  mapOpacity: number;
-  smallGridColor: string;
-  largeGridColor: string;
-  smallGridLineWidth: number;
-  largeGridLineWidth: number;
-}
-
-export const APPEARANCE_PRESETS: Record<AppearanceMode, AppearancePreset> = {
+export const DEFAULT_APPEARANCE_BY_MODE: Record<AppearanceMode, AppearanceSettings> = {
   screen: {
-    mode: "screen",
     mapGrayscale: false,
     mapBrightness: 100,
     mapContrast: 100,
@@ -27,7 +13,6 @@ export const APPEARANCE_PRESETS: Record<AppearanceMode, AppearancePreset> = {
     smallGridLineWidth: 1,
   },
   printBw: {
-    mode: "printBw",
     mapGrayscale: true,
     mapBrightness: 140,
     mapContrast: 85,
@@ -40,20 +25,66 @@ export const APPEARANCE_PRESETS: Record<AppearanceMode, AppearancePreset> = {
   },
 };
 
-export function applyAppearancePreset(settings: MapSettings, mode: AppearanceMode): MapSettings {
-  const preset = APPEARANCE_PRESETS[mode];
+export function getDefaultAppearanceForMode(mode: AppearanceMode): AppearanceSettings {
+  return { ...DEFAULT_APPEARANCE_BY_MODE[mode] };
+}
 
+export function getActiveAppearance(settings: MapSettings): AppearanceSettings {
+  return settings.appearanceByMode[settings.activeAppearanceMode];
+}
+
+export function applyActiveAppearance(settings: MapSettings, appearance: AppearanceSettings): MapSettings {
   return {
     ...settings,
-    appearanceMode: preset.mode,
-    mapGrayscale: preset.mapGrayscale,
-    mapBrightness: preset.mapBrightness,
-    mapContrast: preset.mapContrast,
-    mapSaturation: preset.mapSaturation,
-    mapOpacity: preset.mapOpacity,
-    smallGridColor: preset.smallGridColor,
-    largeGridColor: preset.largeGridColor,
-    smallGridLineWidth: preset.smallGridLineWidth,
-    largeGridLineWidth: preset.largeGridLineWidth,
+    ...appearance,
   };
+}
+
+export function setAppearanceMode(settings: MapSettings, mode: AppearanceMode): MapSettings {
+  return applyActiveAppearance(
+    {
+      ...settings,
+      activeAppearanceMode: mode,
+    },
+    settings.appearanceByMode[mode],
+  );
+}
+
+export function updateActiveAppearance<K extends keyof AppearanceSettings>(
+  settings: MapSettings,
+  key: K,
+  value: AppearanceSettings[K],
+): MapSettings {
+  const mode = settings.activeAppearanceMode;
+  const nextAppearance = {
+    ...settings.appearanceByMode[mode],
+    [key]: value,
+  };
+
+  return applyActiveAppearance(
+    {
+      ...settings,
+      appearanceByMode: {
+        ...settings.appearanceByMode,
+        [mode]: nextAppearance,
+      },
+    },
+    nextAppearance,
+  );
+}
+
+export function resetAppearanceMode(settings: MapSettings): MapSettings {
+  const mode = settings.activeAppearanceMode;
+  const nextAppearance = getDefaultAppearanceForMode(mode);
+
+  return applyActiveAppearance(
+    {
+      ...settings,
+      appearanceByMode: {
+        ...settings.appearanceByMode,
+        [mode]: nextAppearance,
+      },
+    },
+    nextAppearance,
+  );
 }
