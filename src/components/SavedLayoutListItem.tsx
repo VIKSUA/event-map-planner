@@ -17,23 +17,28 @@ export function SavedLayoutListItem({
   onLoad: (layout: SavedLayout) => void;
 }) {
   const settings = layout.settings;
+  const modeLabel = settings.activeAppearanceMode === "printBw" ? "B/W" : "Screen";
 
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { xs: "stretch", sm: "center" } }}>
+    <Card variant="outlined" sx={{ height: "100%" }}>
+      <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ height: "100%", alignItems: { xs: "stretch", sm: "center" } }}>
           <SavedLayoutThumbnail layout={layout} />
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography component="h3" sx={{ fontWeight: 700 }}>
+            <Typography component="h3" sx={{ fontWeight: 700, fontSize: 15, lineHeight: 1.25 }}>
               {layout.name}
             </Typography>
-            <Typography sx={{ color: "text.secondary", fontSize: 13 }}>Saved {formatDate(layout.updatedAt)}</Typography>
-            <Typography sx={{ mt: 0.75, color: "text.secondary", fontSize: 13 }}>
+            <Typography sx={{ color: "text.secondary", fontSize: 12.5 }}>Saved {formatDate(layout.updatedAt)}</Typography>
+            <Typography sx={{ mt: 0.5, color: "text.secondary", fontSize: 12.5, lineHeight: 1.35 }}>
               {settings.latitude.toFixed(6)}, {settings.longitude.toFixed(6)} · z{Math.round(settings.zoom)} · scale {Math.round(settings.scale)}% · rot{" "}
-              {Math.round(settings.rotation)}° · {settings.format} {settings.format === "square" ? "" : settings.orientation}
+              {Math.round(settings.rotation)}° · {settings.format} {settings.format === "square" ? "" : settings.orientation} · {modeLabel}
             </Typography>
           </Box>
-          <Stack direction="row" spacing={1} sx={{ flex: "0 0 auto", justifyContent: "flex-end" }}>
+          <Stack
+            direction={{ xs: "row", sm: "column" }}
+            spacing={0.75}
+            sx={{ flex: "0 0 auto", alignItems: "center", justifyContent: { xs: "flex-end", sm: "center" } }}
+          >
             <Button variant="contained" size="small" onClick={() => onLoad(layout)}>
               Load
             </Button>

@@ -1,22 +1,22 @@
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import type { SavedLayout } from "../lib/savedLayouts";
 import { formatRatio } from "../lib/mapMath";
 
 export function SavedLayoutThumbnail({ layout }: { layout: SavedLayout }) {
   const settings = layout.settings;
   const ratio = formatRatio(settings.format, settings.orientation);
-  const modeLabel = settings.activeAppearanceMode === "printBw" ? "B/W" : "Screen";
 
   return (
     <Box
       sx={{
-        width: 132,
+        width: { xs: "100%", sm: 196 },
+        maxWidth: { xs: "100%", sm: 220 },
         flex: "0 0 auto",
         border: "1px solid",
         borderColor: "divider",
         borderRadius: 1.5,
         backgroundColor: "#f8fafc",
-        p: 1,
+        p: 0.75,
       }}
     >
       <Box
@@ -24,7 +24,7 @@ export function SavedLayoutThumbnail({ layout }: { layout: SavedLayout }) {
           position: "relative",
           width: "100%",
           aspectRatio: `${ratio} / 1`,
-          minHeight: 64,
+          minHeight: 108,
           overflow: "hidden",
           borderRadius: 1,
           backgroundColor: settings.mapGrayscale ? "#f3f4f6" : "#eff6ff",
@@ -44,9 +44,6 @@ export function SavedLayoutThumbnail({ layout }: { layout: SavedLayout }) {
           }}
         />
       </Box>
-      <Typography sx={{ mt: 0.75, fontSize: 11, color: "text.secondary", textAlign: "center" }}>
-        {modeLabel} · z{Math.round(settings.zoom)}
-      </Typography>
     </Box>
   );
 }

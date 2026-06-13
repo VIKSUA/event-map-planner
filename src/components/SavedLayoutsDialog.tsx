@@ -1,5 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { AppBar, Box, Dialog, DialogContent, IconButton, Stack, Toolbar, Typography } from "@mui/material";
+import { AppBar, Box, Dialog, DialogContent, IconButton, Toolbar, Typography } from "@mui/material";
 import type { SavedLayout } from "../lib/savedLayouts";
 import { SavedLayoutListItem } from "./SavedLayoutListItem";
 
@@ -39,17 +39,24 @@ export function SavedLayoutsDialog({
           </IconButton>
         </Toolbar>
       </AppBar>
-      <DialogContent sx={{ backgroundColor: "#f8fafc" }}>
+      <DialogContent sx={{ backgroundColor: "#f8fafc", p: { xs: 1.5, md: 2 } }}>
         {layouts.length === 0 ? (
           <Box sx={{ minHeight: "60vh", display: "grid", placeItems: "center", color: "text.secondary" }}>
             <Typography>No saved maps yet.</Typography>
           </Box>
         ) : (
-          <Stack spacing={1.5} sx={{ maxWidth: 1100, mx: "auto", py: 2 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" },
+              gap: { xs: 1.5, md: 2 },
+              width: "100%",
+            }}
+          >
             {layouts.map((layout) => (
               <SavedLayoutListItem key={layout.id} layout={layout} onDelete={onDelete} onLoad={onLoad} />
             ))}
-          </Stack>
+          </Box>
         )}
       </DialogContent>
     </Dialog>
