@@ -8,13 +8,12 @@ interface SlideOutPanelProps {
   children: ReactNode;
   defaultCollapsed?: boolean;
   storageKey?: string;
-  top?: number;
   width?: number;
 }
 
 const HANDLE_WIDTH = 30;
 
-export function SlideOutPanel({ children, defaultCollapsed = false, storageKey, top = 16, width = 360 }: SlideOutPanelProps) {
+export function SlideOutPanel({ children, defaultCollapsed = false, storageKey, width = 360 }: SlideOutPanelProps) {
   const [collapsed, setCollapsed] = useState(() => {
     if (!storageKey) {
       return defaultCollapsed;
@@ -38,12 +37,8 @@ export function SlideOutPanel({ children, defaultCollapsed = false, storageKey, 
 
   return (
     <Box
-      className="no-print"
       sx={{
-        position: "absolute",
-        top,
-        right: 16,
-        zIndex: 6,
+        position: "relative",
         width,
         maxWidth: `calc(100vw - ${HANDLE_WIDTH + 24}px)`,
         transform: collapsed ? "translateX(100%)" : "translateX(0)",

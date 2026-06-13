@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ExportSize, MapSettings, MapSource } from "../types/map";
 import { drawComposition } from "../lib/drawCanvas";
 import { getExportSize, getGridMetrics } from "../lib/mapMath";
+import { OverlayPanelStack } from "./OverlayPanelStack";
 import { SlideOutPanel } from "./SlideOutPanel";
 import { useMapDragPan } from "./useMapDragPan";
 
@@ -102,40 +103,42 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onPa
           </div>
         )}
       </div>
-      {statusItems.length > 0 && (
-        <SlideOutPanel storageKey="map-background-exporter.status-panel" top={16} width={360}>
-          <div className="status-stack">
-            {statusItems.map((item) => (
-              <div className={`status ${item.kind === "error" ? "status-error" : item.kind === "warning" ? "status-warning" : ""}`} key={`${item.kind}-${item.text}`}>
-                {item.text}
-              </div>
-            ))}
-          </div>
-        </SlideOutPanel>
-      )}
+      <OverlayPanelStack>
+        {statusItems.length > 0 && (
+          <SlideOutPanel storageKey="map-background-exporter.status-panel" width={360}>
+            <div className="status-stack">
+              {statusItems.map((item) => (
+                <div className={`status ${item.kind === "error" ? "status-error" : item.kind === "warning" ? "status-warning" : ""}`} key={`${item.kind}-${item.text}`}>
+                  {item.text}
+                </div>
+              ))}
+            </div>
+          </SlideOutPanel>
+        )}
 
-      {gridMetrics && (
-        <SlideOutPanel storageKey="map-background-exporter.debug-panel" defaultCollapsed top={160} width={340}>
-          <div className="status debug-metrics">
-            <strong>Grid debug</strong>
-            <span>export: {exportSize.width} x {exportSize.height}px</span>
-            <span>previewScale: {formatMetric(previewScale)}</span>
-            <span>webMpp: {formatMetric(gridMetrics.webMercatorMetersPerPixel)}</span>
-            <span>googleScale: {gridMetrics.googleStaticScale}</span>
-            <span>source: {gridMetrics.sourceImageWidth} x {gridMetrics.sourceImageHeight}px</span>
-            <span>logical/tile: {gridMetrics.requestedStaticLogicalSize}px</span>
-            <span>tileCount: {gridMetrics.tileCount}</span>
-            <span>mapDrawSize: {formatMetric(gridMetrics.mapDrawSize)}px</span>
-            <span>sourceToCanvas: {formatMetric(gridMetrics.sourceToCanvasScale)}</span>
-            <span>totalMapScale: {formatMetric(gridMetrics.totalMapScale)}</span>
-            <span>userScale: {formatMetric(gridMetrics.userScaleFactor)}</span>
-            <span>effectiveMpp: {formatMetric(gridMetrics.effectiveMetersPerCanvasPixel)}</span>
-            <span>smallStep: {formatMetric(gridMetrics.smallGridStepPx)}px</span>
-            <span>largeStep: {formatMetric(gridMetrics.largeGridStepPx)}px</span>
-            <span>unit: {settings.unit}</span>
-          </div>
-        </SlideOutPanel>
-      )}
+        {gridMetrics && (
+          <SlideOutPanel storageKey="map-background-exporter.debug-panel" defaultCollapsed width={340}>
+            <div className="status debug-metrics">
+              <strong>Grid debug</strong>
+              <span>export: {exportSize.width} x {exportSize.height}px</span>
+              <span>previewScale: {formatMetric(previewScale)}</span>
+              <span>webMpp: {formatMetric(gridMetrics.webMercatorMetersPerPixel)}</span>
+              <span>googleScale: {gridMetrics.googleStaticScale}</span>
+              <span>source: {gridMetrics.sourceImageWidth} x {gridMetrics.sourceImageHeight}px</span>
+              <span>logical/tile: {gridMetrics.requestedStaticLogicalSize}px</span>
+              <span>tileCount: {gridMetrics.tileCount}</span>
+              <span>mapDrawSize: {formatMetric(gridMetrics.mapDrawSize)}px</span>
+              <span>sourceToCanvas: {formatMetric(gridMetrics.sourceToCanvasScale)}</span>
+              <span>totalMapScale: {formatMetric(gridMetrics.totalMapScale)}</span>
+              <span>userScale: {formatMetric(gridMetrics.userScaleFactor)}</span>
+              <span>effectiveMpp: {formatMetric(gridMetrics.effectiveMetersPerCanvasPixel)}</span>
+              <span>smallStep: {formatMetric(gridMetrics.smallGridStepPx)}px</span>
+              <span>largeStep: {formatMetric(gridMetrics.largeGridStepPx)}px</span>
+              <span>unit: {settings.unit}</span>
+            </div>
+          </SlideOutPanel>
+        )}
+      </OverlayPanelStack>
     </main>
   );
 }
