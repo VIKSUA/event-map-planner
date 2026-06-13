@@ -23,12 +23,14 @@ interface UseMapDragPanProps {
   source: MapSource | null;
   exportSize: ExportSize;
   previewScale: number;
+  loadError: string | null;
   onPanEnd: (latitude: number, longitude: number) => void;
 }
 
-export function useMapDragPan({ settings, source, exportSize, previewScale, onPanEnd }: UseMapDragPanProps) {
+export function useMapDragPan({ settings, source, exportSize, previewScale, loadError, onPanEnd }: UseMapDragPanProps) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isPanLocked, setIsPanLocked] = useState(false);
   const dragStartRef = useRef<DragStart | null>(null);
   const pendingCommitRef = useRef<PendingCommit | null>(null);
 
@@ -37,14 +39,28 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
       pendingCommitRef.current = null;
       setDragOffset({ x: 0, y: 0 });
       setIsDragging(false);
+      setIsPanLocked(false);
       return;
     }
 
     if (!pendingCommitRef.current && !dragStartRef.current) {
       setDragOffset({ x: 0, y: 0 });
       setIsDragging(false);
+      setIsPanLocked(false);
     }
   }, [source]);
+
+  useEffect(() => {
+    if (!loadError || !pendingCommitRef.current) {
+      return;
+    }
+
+    pendingCommitRef.current = null;
+    dragStartRef.current = null;
+    setDragOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+    setIsPanLocked(false);
+  }, [loadError]);
 
   const getExportDelta = useCallback((event: ReactPointerEvent<HTMLElement>, dragStart: DragStart) => {
     const scale = Math.max(dragStart.previewScale, 0.0001);
@@ -56,7 +72,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
-      if (!source || pendingCommitRef.current || event.button !== 0) {
+      if (!source || isPanLocked || event.button !== 0) {
         return;
       }
 
@@ -77,7 +93,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
       setDragOffset({ x: 0, y: 0 });
       setIsDragging(true);
     },
-    [exportSize, previewScale, settings, source],
+    [exportSize, isPanLocked, previewScale, settings, source],
   );
 
   const handlePointerMove = useCallback(
@@ -117,6 +133,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
       setDragOffset(delta);
       if (source) {
         pendingCommitRef.current = { source };
+        setIsPanLocked(true);
       }
 
       const next = moveCenterByScreenMeters(
@@ -137,7 +154,8 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, onPa
   return {
     dragOffset,
     isDragging,
-    isMapUpdatingAfterDrag: Boolean(pendingCommitRef.current),
+    isPanLocked,
+    isMapUpdatingAfterDrag: isPanLocked,
     dragHandlers: {
       onPointerDown: handlePointerDown,
       onPointerMove: handlePointerMove,

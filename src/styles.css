@@ -51,6 +51,10 @@ body,
   cursor: grabbing;
 }
 
+.canvas-card.is-pan-locked {
+  cursor: wait;
+}
+
 .canvas-card canvas {
   display: block;
 }

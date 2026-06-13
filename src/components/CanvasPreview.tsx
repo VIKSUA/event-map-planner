@@ -38,11 +38,12 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onPa
   const exportSize = getExportSize(settings);
   const previewScale = previewSize.width / exportSize.width;
   const gridMetrics = source ? getGridMetrics(settings, exportSize, source) : null;
-  const { dragOffset, isDragging, isMapUpdatingAfterDrag, dragHandlers } = useMapDragPan({
+  const { dragOffset, isDragging, isPanLocked, isMapUpdatingAfterDrag, dragHandlers } = useMapDragPan({
     settings,
     source,
     exportSize,
     previewScale,
+    loadError: error,
     onPanEnd,
   });
   const statusItems = [
@@ -90,9 +91,9 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onPa
   return (
     <main ref={wrapperRef} className="preview-shell">
       <div
-        className={`canvas-card ${isDragging ? "is-dragging" : ""}`}
+        className={`canvas-card ${isDragging ? "is-dragging" : ""} ${isPanLocked ? "is-pan-locked" : ""}`}
         style={{ width: previewSize.width, height: previewSize.height }}
-        title="Drag map to move"
+        title={isPanLocked ? "Updating map..." : "Drag map to move"}
         {...dragHandlers}
       >
         <canvas ref={canvasRef} aria-label="Map export preview" />
