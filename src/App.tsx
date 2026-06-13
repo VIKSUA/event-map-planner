@@ -4,6 +4,7 @@ import { ControlPanel } from "./components/ControlPanel";
 import { DraggablePanel } from "./components/DraggablePanel";
 import { downloadPng } from "./lib/download";
 import { fetchMapSource } from "./lib/googleStaticMap";
+import { getRequestCostByResolutionMode, useGoogleRequestCounter } from "./lib/googleRequestCounter";
 import { DEFAULT_SETTINGS, getExportSize, getMapDrawSize } from "./lib/mapMath";
 import { printMap } from "./lib/print";
 import { loadSettings, saveSettings } from "./lib/storage";
@@ -25,6 +26,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const { requestCount, addRequests, resetRequests } = useGoogleRequestCounter();
   const sourceKey = useMemo(() => mapSourceKey(settings), [settings]);
   const exportSize = getExportSize(settings);
   const displayWarnings = useMemo(() => {
@@ -55,6 +57,7 @@ export default function App() {
 
     setLoading(true);
     setError(null);
+    addRequests(getRequestCostByResolutionMode(settings.resolutionMode));
 
     fetchMapSource(settings)
       .then((nextSource) => {
@@ -129,6 +132,8 @@ export default function App() {
           onDownload={handleDownload}
           onPrint={handlePrint}
           onReset={() => setSettings(DEFAULT_SETTINGS)}
+          requestCount={requestCount}
+          onResetRequestCount={resetRequests}
           busy={loading}
         />
       </DraggablePanel>

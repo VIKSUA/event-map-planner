@@ -6,10 +6,11 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DownloadIcon from "@mui/icons-material/Download";
 import PrintIcon from "@mui/icons-material/Print";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import RemoveIcon from "@mui/icons-material/Remove";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
-import { Button, FormControlLabel, Stack, Checkbox } from "@mui/material";
+import { Button, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
 import type { MapSettings, Orientation, PageFormat, ResolutionMode, Unit } from "../../types/map";
 import { MAX_GRID_LINE_WIDTH, MAX_SCALE, MAX_ZOOM, MIN_GRID_LINE_WIDTH, MIN_SCALE, MIN_ZOOM } from "../../lib/mapConstants";
 import {
@@ -28,9 +29,25 @@ interface SharedSectionProps {
   numberValue: (value: string, fallback: number) => number;
 }
 
-export function ApiSourceSection({ settings, update, resetSource }: SharedSectionProps & { resetSource: () => void }) {
+export function ApiSourceSection({
+  settings,
+  update,
+  requestCount,
+  resetSource,
+  resetRequestCount,
+}: SharedSectionProps & { requestCount: number; resetSource: () => void; resetRequestCount: () => void }) {
+  const requestLabel = requestCount === 1 ? "request" : "requests";
+
   return (
-    <Section title="API / Source" action={<IconActionButton title="Reset source settings" icon={RefreshIcon} onClick={resetSource} />}>
+    <Section
+      title={`Google API: ${requestCount} ${requestLabel}`}
+      action={
+        <Stack direction="row" spacing={0.25}>
+          <IconActionButton title="Reset source settings" icon={RefreshIcon} onClick={resetSource} />
+          <IconActionButton title="Reset request counter" icon={RestartAltIcon} onClick={resetRequestCount} />
+        </Stack>
+      }
+    >
       <CompactTextField label="Key" type="password" value={settings.apiKey} placeholder="Local only" onChange={(value) => update("apiKey", value)} />
       <CompactSelectField<ResolutionMode>
         label="Source"
@@ -42,6 +59,7 @@ export function ApiSourceSection({ settings, update, resetSource }: SharedSectio
           { value: "ultra", label: "Ultra 3x3" },
         ]}
       />
+      <Typography sx={{ gridColumn: "1 / -1", color: "text.secondary", fontSize: 11 }}>Standard +1, High +4, Ultra +9</Typography>
     </Section>
   );
 }

@@ -35,6 +35,8 @@ interface ControlPanelProps {
   onDownload: () => void;
   onPrint: () => void;
   onReset: () => void;
+  requestCount: number;
+  onResetRequestCount: () => void;
   busy: boolean;
 }
 
@@ -55,7 +57,7 @@ function clampScale(value: number): number {
   return clamp(Math.round(value), MIN_SCALE, MAX_SCALE);
 }
 
-export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset, busy }: ControlPanelProps) {
+export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset, requestCount, onResetRequestCount, busy }: ControlPanelProps) {
   const update = <K extends keyof MapSettings>(key: K, value: MapSettings[K]) => {
     onChange({ ...settings, [key]: value });
   };
@@ -111,7 +113,14 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
     <Box component="form" onSubmit={(event) => event.preventDefault()}>
       <Stack spacing={0}>
         <Typography sx={{ px: 1, pb: 0.5, fontSize: 12, color: "text.secondary" }}>Export controls</Typography>
-        <ApiSourceSection settings={settings} update={update} numberValue={numericValue} resetSource={resetSource} />
+        <ApiSourceSection
+          settings={settings}
+          update={update}
+          numberValue={numericValue}
+          requestCount={requestCount}
+          resetSource={resetSource}
+          resetRequestCount={onResetRequestCount}
+        />
         <LocationSection settings={settings} update={update} numberValue={numericValue} nudge={nudge} resetLocation={resetLocation} />
         <ViewSection
           settings={{ ...settings, zoom, scale }}
