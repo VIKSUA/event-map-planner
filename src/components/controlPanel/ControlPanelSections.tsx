@@ -4,6 +4,8 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DownloadIcon from "@mui/icons-material/Download";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import PrintIcon from "@mui/icons-material/Print";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -21,6 +23,7 @@ import {
   FieldRow,
   IconActionButton,
   Section,
+  ViewControlRow,
 } from "./ControlPanelFields";
 
 interface SharedSectionProps {
@@ -92,6 +95,7 @@ export function ViewSection({
   updateRotation,
   resetZoomScale,
   resetRotation,
+  toggleZoomScaleLock,
   numberValue,
   canZoomOut,
   canZoomIn,
@@ -104,6 +108,7 @@ export function ViewSection({
   updateRotation: (value: number) => void;
   resetZoomScale: () => void;
   resetRotation: () => void;
+  toggleZoomScaleLock: () => void;
   numberValue: (value: string, fallback: number) => number;
   canZoomOut: boolean;
   canZoomIn: boolean;
@@ -112,26 +117,60 @@ export function ViewSection({
 }) {
   const zoom = Math.round(settings.zoom);
   const scale = Math.round(settings.scale);
+  const locked = settings.isZoomScaleLocked;
   return (
-    <Section title="View">
-      <FieldRow>
-        <CompactNumberField label="Zoom" value={zoom} min={MIN_ZOOM} max={MAX_ZOOM} step={1} helperText={`${MIN_ZOOM}-${MAX_ZOOM}`} onChange={(value) => updateZoom(numberValue(value, zoom))} />
-        <IconActionButton title="Zoom out" icon={RemoveIcon} disabled={!canZoomOut} onClick={() => updateZoom(zoom - 1)} />
-        <IconActionButton title="Zoom in" icon={AddIcon} disabled={!canZoomIn} onClick={() => updateZoom(zoom + 1)} />
-        <IconActionButton title="Reset zoom and scale" icon={RefreshIcon} onClick={resetZoomScale} />
-      </FieldRow>
-      <FieldRow>
-        <CompactNumberField label="Scale" value={scale} min={MIN_SCALE} max={MAX_SCALE} step={1} helperText={`${MIN_SCALE}-${MAX_SCALE}%`} onChange={(value) => updateScale(numberValue(value, scale))} />
-        <IconActionButton title="Scale down" icon={RemoveIcon} disabled={!canScaleOut} onClick={() => updateScale(scale - 5)} />
-        <IconActionButton title="Scale up" icon={AddIcon} disabled={!canScaleIn} onClick={() => updateScale(scale + 5)} />
-        <IconActionButton title="Reset zoom and scale" icon={RefreshIcon} onClick={resetZoomScale} />
-      </FieldRow>
-      <FieldRow>
-        <CompactNumberField label="Rot" value={settings.rotation} step={1} onChange={(value) => updateRotation(numberValue(value, settings.rotation))} />
+    <Section
+      title="View"
+      action={
+        <IconActionButton
+          title={locked ? "Unlock zoom and scale" : "Lock zoom and scale"}
+          icon={locked ? LockIcon : LockOpenIcon}
+          active={locked}
+          onClick={toggleZoomScaleLock}
+        />
+      }
+    >
+      <ViewControlRow
+        field={
+          <CompactNumberField
+            label="Zoom"
+            value={zoom}
+            min={MIN_ZOOM}
+            max={MAX_ZOOM}
+            step={1}
+            helperText={`${MIN_ZOOM}-${MAX_ZOOM}`}
+            disabled={locked}
+            onChange={(value) => updateZoom(numberValue(value, zoom))}
+          />
+        }
+      >
+        <IconActionButton title="Zoom out" icon={RemoveIcon} disabled={locked || !canZoomOut} onClick={() => updateZoom(zoom - 1)} />
+        <IconActionButton title="Zoom in" icon={AddIcon} disabled={locked || !canZoomIn} onClick={() => updateZoom(zoom + 1)} />
+        <IconActionButton title="Reset zoom and scale" icon={RefreshIcon} disabled={locked} onClick={resetZoomScale} />
+      </ViewControlRow>
+      <ViewControlRow
+        field={
+          <CompactNumberField
+            label="Scale"
+            value={scale}
+            min={MIN_SCALE}
+            max={MAX_SCALE}
+            step={1}
+            helperText={`${MIN_SCALE}-${MAX_SCALE}%`}
+            disabled={locked}
+            onChange={(value) => updateScale(numberValue(value, scale))}
+          />
+        }
+      >
+        <IconActionButton title="Scale down" icon={RemoveIcon} disabled={locked || !canScaleOut} onClick={() => updateScale(scale - 5)} />
+        <IconActionButton title="Scale up" icon={AddIcon} disabled={locked || !canScaleIn} onClick={() => updateScale(scale + 5)} />
+        <IconActionButton title="Reset zoom and scale" icon={RefreshIcon} disabled={locked} onClick={resetZoomScale} />
+      </ViewControlRow>
+      <ViewControlRow field={<CompactNumberField label="Rot" value={settings.rotation} step={1} onChange={(value) => updateRotation(numberValue(value, settings.rotation))} />}>
         <IconActionButton title="Rotate left" icon={RotateLeftIcon} onClick={() => updateRotation(settings.rotation - 1)} />
         <IconActionButton title="Rotate right" icon={RotateRightIcon} onClick={() => updateRotation(settings.rotation + 1)} />
         <IconActionButton title="Reset rotation" icon={RefreshIcon} onClick={resetRotation} />
-      </FieldRow>
+      </ViewControlRow>
     </Section>
   );
 }

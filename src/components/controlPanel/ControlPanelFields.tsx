@@ -37,6 +37,17 @@ export function FieldRow({ children }: { children: ReactNode }) {
   );
 }
 
+export function ViewControlRow({ field, children }: { field: ReactNode; children: ReactNode }) {
+  return (
+    <Box sx={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 0.5, alignItems: "start" }}>
+      {field}
+      <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", pt: 0.5 }}>
+        {children}
+      </Stack>
+    </Box>
+  );
+}
+
 export function CompactNumberField({
   label,
   value,
@@ -45,6 +56,7 @@ export function CompactNumberField({
   max,
   step,
   helperText,
+  disabled,
 }: {
   label: string;
   value: number;
@@ -53,6 +65,7 @@ export function CompactNumberField({
   max?: number;
   step?: number;
   helperText?: string;
+  disabled?: boolean;
 }) {
   return (
     <TextField
@@ -62,6 +75,7 @@ export function CompactNumberField({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       helperText={helperText}
+      disabled={disabled}
       fullWidth
       slotProps={{ htmlInput: { min, max, step } }}
     />
@@ -141,11 +155,13 @@ export function IconActionButton({
   icon: Icon,
   onClick,
   disabled,
+  active,
 }: {
   title: string;
   icon: ElementType;
   onClick: () => void;
   disabled?: boolean;
+  active?: boolean;
 }) {
   return (
     <Tooltip title={title}>
@@ -155,7 +171,13 @@ export function IconActionButton({
           size="small"
           onClick={onClick}
           disabled={disabled}
-          sx={{ width: COMPACT_ICON_SIZE, height: COMPACT_ICON_SIZE, flex: "0 0 auto" }}
+          sx={{
+            width: COMPACT_ICON_SIZE,
+            height: COMPACT_ICON_SIZE,
+            flex: "0 0 auto",
+            color: active ? "primary.main" : undefined,
+            backgroundColor: active ? "rgba(37, 99, 235, 0.08)" : undefined,
+          }}
         >
           <Icon fontSize="small" />
         </IconButton>

@@ -19,6 +19,7 @@ import {
   DEFAULT_SHOW_GRID,
   DEFAULT_UNIT,
   DEFAULT_ZOOM,
+  DEFAULT_ZOOM_SCALE_LOCKED,
 } from "./mapConstants";
 
 const EARTH_CIRCUMFERENCE_METERS_PER_PIXEL = 156543.03392;
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: MapSettings = {
   zoom: DEFAULT_ZOOM,
   rotation: DEFAULT_ROTATION,
   scale: DEFAULT_SCALE,
+  isZoomScaleLocked: DEFAULT_ZOOM_SCALE_LOCKED,
   unit: DEFAULT_UNIT,
   smallGridMeters: DEFAULT_SMALL_GRID_METERS,
   largeGridMeters: DEFAULT_LARGE_GRID_METERS,

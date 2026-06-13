@@ -10,6 +10,7 @@ export interface MapSettings {
   zoom: number;
   rotation: number;
   scale: number;
+  isZoomScaleLocked: boolean;
   unit: Unit;
   smallGridMeters: number;
   largeGridMeters: number;

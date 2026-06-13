@@ -63,10 +63,11 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
   };
   const zoom = clampZoom(settings.zoom);
   const scale = clampScale(settings.scale);
-  const canZoomOut = zoom > MIN_ZOOM;
-  const canZoomIn = zoom < MAX_ZOOM;
-  const canScaleOut = scale > MIN_SCALE;
-  const canScaleIn = scale < MAX_SCALE;
+  const zoomScaleLocked = settings.isZoomScaleLocked;
+  const canZoomOut = !zoomScaleLocked && zoom > MIN_ZOOM;
+  const canZoomIn = !zoomScaleLocked && zoom < MAX_ZOOM;
+  const canScaleOut = !zoomScaleLocked && scale > MIN_SCALE;
+  const canScaleIn = !zoomScaleLocked && scale < MAX_SCALE;
 
   const nudge = (direction: "left" | "right" | "up" | "down") => {
     const next = moveByMeters(settings.latitude, settings.longitude, direction, DEFAULT_MOVE_STEP_METERS, settings.rotation);
@@ -84,11 +85,24 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
     }
   };
 
-  const updateZoom = (value: number) => update("zoom", clampZoom(value));
-  const updateScale = (value: number) => update("scale", clampScale(value));
+  const updateZoom = (value: number) => {
+    if (!zoomScaleLocked) {
+      update("zoom", clampZoom(value));
+    }
+  };
+  const updateScale = (value: number) => {
+    if (!zoomScaleLocked) {
+      update("scale", clampScale(value));
+    }
+  };
   const updateRotation = (value: number) => update("rotation", Math.round(value));
-  const resetZoomScale = () => onChange({ ...settings, zoom: DEFAULT_ZOOM, scale: DEFAULT_SCALE });
+  const resetZoomScale = () => {
+    if (!zoomScaleLocked) {
+      onChange({ ...settings, zoom: DEFAULT_ZOOM, scale: DEFAULT_SCALE });
+    }
+  };
   const resetRotation = () => update("rotation", DEFAULT_ROTATION);
+  const toggleZoomScaleLock = () => update("isZoomScaleLocked", !settings.isZoomScaleLocked);
   const resetSource = () => update("resolutionMode", DEFAULT_RESOLUTION_MODE);
   const resetLocation = () => onChange({ ...settings, latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE });
   const resetGrid = () =>
@@ -129,6 +143,7 @@ export function ControlPanel({ settings, onChange, onDownload, onPrint, onReset,
           updateRotation={updateRotation}
           resetZoomScale={resetZoomScale}
           resetRotation={resetRotation}
+          toggleZoomScaleLock={toggleZoomScaleLock}
           numberValue={numericValue}
           canZoomOut={canZoomOut}
           canZoomIn={canZoomIn}

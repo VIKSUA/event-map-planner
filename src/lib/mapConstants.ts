@@ -3,6 +3,7 @@ export const DEFAULT_LONGITUDE = -79.587222;
 export const DEFAULT_ZOOM = 18;
 export const DEFAULT_ROTATION = 44;
 export const DEFAULT_SCALE = 165;
+export const DEFAULT_ZOOM_SCALE_LOCKED = false;
 export const DEFAULT_MOVE_STEP_METERS = 1;
 
 export const MIN_ZOOM = 0;
