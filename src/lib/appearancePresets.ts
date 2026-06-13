@@ -14,7 +14,7 @@ export const DEFAULT_APPEARANCE_BY_MODE: Record<AppearanceMode, AppearanceSettin
   },
   printBw: {
     mapGrayscale: true,
-    mapBrightness: 140,
+    mapBrightness: 160,
     mapContrast: 85,
     mapSaturation: 0,
     mapOpacity: 65,
