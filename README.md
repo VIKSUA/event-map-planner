@@ -21,13 +21,15 @@ Because this is a static frontend-only tool, the API key is visible in browser n
 
 Recommended key restrictions:
 
-- HTTP referrer for GitHub Pages: `https://<github-username>.github.io/<repo-name>/*`
 - HTTP referrer for local dev: `http://localhost:5173/*`
+- HTTP referrer for local preview fallback: `http://localhost:5174/*`
+- HTTP referrer for GitHub Pages: `https://viksua.github.io/event-map-planner/*`
 - API restriction: Google Maps Static API only
 
 ## Build
 
 ```bash
+npm install
 npm run type-check
 npm run build
 npm run preview
@@ -35,21 +37,46 @@ npm run preview
 
 The production output is written to `dist`.
 
-## GitHub Pages
+## Deployment / GitHub Pages
 
-The workflow in `.github/workflows/deploy.yml` builds on pushes to `main` and deploys `dist` to GitHub Pages.
+The workflow in `.github/workflows/deploy.yml` builds on pushes to `main` and deploys `dist` to GitHub Pages using GitHub Actions.
 
-The final Pages URL will be:
+Final GitHub Pages URL:
 
 ```text
-https://<github-username>.github.io/<repo-name>/
+https://viksua.github.io/event-map-planner/
 ```
 
-`vite.config.ts` sets `base` automatically from `GITHUB_REPOSITORY` in GitHub Actions. For a custom deployment path, set `VITE_BASE_PATH`, for example:
+Enable Pages in GitHub:
+
+1. Open the GitHub repository.
+2. Go to Settings -> Pages.
+3. Under Build and deployment, set Source to GitHub Actions.
+4. Push to `main`; the deploy workflow will run automatically.
+
+The workflow runs:
+
+```bash
+npm ci
+npm run type-check
+npm run build
+```
+
+Then it uploads `dist` with `actions/upload-pages-artifact` and publishes it with `actions/deploy-pages`.
+
+`vite.config.ts` sets `base` automatically from `GITHUB_REPOSITORY` in GitHub Actions, so project pages build with `/event-map-planner/` while local dev falls back to `/`. For a custom deployment path, set `VITE_BASE_PATH`, for example:
 
 ```bash
 VITE_BASE_PATH=/my-repo/ npm run build
 ```
+
+Google API key reminders for deployment:
+
+- The API key is not stored in the repository.
+- The API key is entered in the app UI.
+- The API key is saved only in the current browser's `localStorage`.
+- The API key should be restricted by HTTP referrer.
+- API restrictions should allow only Maps Static API.
 
 ## Rendering Notes
 
