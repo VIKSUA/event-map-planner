@@ -8,8 +8,9 @@ export const DEFAULT_MOVE_STEP_METERS = 1;
 
 export const MIN_ZOOM = 0;
 export const MAX_ZOOM = 22;
-export const MIN_SCALE = 10;
-export const MAX_SCALE = 500;
+// Scale below 100 can expose rotated map edges inside the export area.
+export const MIN_SCALE = 100;
+export const MAX_SCALE = 300;
 
 export const DEFAULT_UNIT = "meters";
 export const DEFAULT_SMALL_GRID_METERS = 1;
