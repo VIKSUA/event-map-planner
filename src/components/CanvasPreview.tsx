@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ExportSize, MapSettings, MapSource } from "../types/map";
 import { drawComposition } from "../lib/drawCanvas";
-import { getExportSize } from "../lib/mapMath";
+import { getExportSize, getGridMetrics } from "../lib/mapMath";
 
 interface CanvasPreviewProps {
   settings: MapSettings;
@@ -18,15 +18,22 @@ function fitSize(containerWidth: number, containerHeight: number, exportSize: Ex
   const scale = Math.min(availableWidth / exportSize.width, availableHeight / exportSize.height);
 
   return {
-    width: Math.max(240, Math.round(exportSize.width * scale)),
-    height: Math.max(240, Math.round(exportSize.height * scale)),
+    width: Math.round(exportSize.width * scale),
+    height: Math.round(exportSize.height * scale),
   };
+}
+
+function formatMetric(value: number): string {
+  return Number.isFinite(value) ? value.toFixed(3) : "n/a";
 }
 
 export function CanvasPreview({ settings, source, loading, error, warnings }: CanvasPreviewProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [previewSize, setPreviewSize] = useState<ExportSize>({ width: 800, height: 800 });
+  const exportSize = getExportSize(settings);
+  const previewScale = previewSize.width / exportSize.width;
+  const gridMetrics = getGridMetrics(settings);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -35,8 +42,7 @@ export function CanvasPreview({ settings, source, loading, error, warnings }: Ca
     }
 
     const resizeObserver = new ResizeObserver(([entry]) => {
-      const exportSize = getExportSize(settings);
-      setPreviewSize(fitSize(entry.contentRect.width, entry.contentRect.height, exportSize));
+      setPreviewSize(fitSize(entry.contentRect.width, entry.contentRect.height, getExportSize(settings)));
     });
 
     resizeObserver.observe(wrapper);
@@ -60,9 +66,9 @@ export function CanvasPreview({ settings, source, loading, error, warnings }: Ca
       return;
     }
 
-    context.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawComposition(context, previewSize, settings, source);
-  }, [previewSize, settings, source]);
+    context.setTransform(previewScale * dpr, 0, 0, previewScale * dpr, 0, 0);
+    drawComposition(context, exportSize, settings, source);
+  }, [exportSize, previewScale, previewSize, settings, source]);
 
   return (
     <main ref={wrapperRef} className="preview-shell">
@@ -81,6 +87,17 @@ export function CanvasPreview({ settings, source, loading, error, warnings }: Ca
         {warnings.map((warning) => (
           <div className="status status-warning" key={warning}>{warning}</div>
         ))}
+        <div className="status debug-metrics">
+          <strong>Grid debug</strong>
+          <span>export: {exportSize.width} x {exportSize.height}px</span>
+          <span>previewScale: {formatMetric(previewScale)}</span>
+          <span>metersPerPixel: {formatMetric(gridMetrics.metersPerPixel)}</span>
+          <span>effectiveMetersPerPixel: {formatMetric(gridMetrics.effectiveMetersPerPixel)}</span>
+          <span>smallGridStepPx: {formatMetric(gridMetrics.smallGridStepPx)}</span>
+          <span>largeGridStepPx: {formatMetric(gridMetrics.largeGridStepPx)}</span>
+          <span>unit: {settings.unit}</span>
+          <span>scaleFactor: {formatMetric(gridMetrics.scaleFactor)}</span>
+        </div>
       </div>
     </main>
   );

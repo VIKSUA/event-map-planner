@@ -52,6 +52,27 @@ export function getGridMeters(settings: MapSettings): { small: number; large: nu
   };
 }
 
+export function getGridMetrics(settings: MapSettings): {
+  metersPerPixel: number;
+  scaleFactor: number;
+  effectiveMetersPerPixel: number;
+  smallGridStepPx: number;
+  largeGridStepPx: number;
+} {
+  const gridMeters = getGridMeters(settings);
+  const baseMetersPerPixel = metersPerPixel(settings.latitude, settings.zoom);
+  const scaleFactor = settings.scale / 100;
+  const scaledMetersPerPixel = baseMetersPerPixel / scaleFactor;
+
+  return {
+    metersPerPixel: baseMetersPerPixel,
+    scaleFactor,
+    effectiveMetersPerPixel: scaledMetersPerPixel,
+    smallGridStepPx: gridMeters.small / scaledMetersPerPixel,
+    largeGridStepPx: gridMeters.large / scaledMetersPerPixel,
+  };
+}
+
 export function formatRatio(format: PageFormat, orientation: Orientation): number {
   if (format === "square") {
     return 1;

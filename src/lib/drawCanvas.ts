@@ -1,5 +1,5 @@
 import type { ExportSize, MapSettings, MapSource } from "../types/map";
-import { effectiveMetersPerPixel, getExportSize, getGridMeters } from "./mapMath";
+import { getExportSize, getGridMetrics } from "./mapMath";
 
 export interface RenderResult {
   canvas: HTMLCanvasElement;
@@ -11,10 +11,7 @@ function snapCoordinate(value: number, lineWidth: number): number {
 }
 
 function drawGrid(context: CanvasRenderingContext2D, width: number, height: number, settings: MapSettings): void {
-  const gridMeters = getGridMeters(settings);
-  const metersPerPixel = effectiveMetersPerPixel(settings);
-  const smallStep = gridMeters.small / metersPerPixel;
-  const largeStep = gridMeters.large / metersPerPixel;
+  const { smallGridStepPx: smallStep, largeGridStepPx: largeStep } = getGridMetrics(settings);
 
   if (smallStep < 2 || largeStep < 2) {
     return;
