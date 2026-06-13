@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Microsoft Map with Grid Overlay and Rectangle Selection</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        overflow: hidden;
+      }
+      body {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0;
+        padding: 0;
+      }
+      .MicrosoftMap #missingCredential {
+        display: none !important;
+      }
+      #map-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 0;
+        overflow: hidden;
+        opacity: 0.4;
+      }
+      #map,
+      #mapCanvas {
+        height: 200%;
+        width: 200%;
+        position: relative;
+        overflow: hidden;
+        transform: translate3d(-25%, -25%, 0) scale(1) rotate(0deg);
+      }
+      .grid {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none; /* Allow interactions with the map */
+        transform: scale(1);
+      }
+      .grid canvas {
+        width: 100%;
+        height: 100%;
+      }
+      .controls {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 2;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      }
+      .controls button,
+      .controls input {
+        margin: 5px;
+      }
+      .controls input {
+        width: 85px;
+      }
+      #rectangle {
+        position: absolute;
+        border: 2px solid blue;
+        pointer-events: none; /* Allow interactions with the map */
+        z-index: 1;
+      }
+      #darken {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+        pointer-events: none; /* Allow interactions with the map */
+      }
+      #mapCanvas {
+        display: none;
+        z-index: 1;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://www.bing.com/api/maps/mapcontrol?callback=initMap"
+      async
+      defer
+    ></script>
+    <script>
+      let unit = "feet";
+      let smallCellMeters = 1; // meters
+      let largeCellMeters = 10; // meters
+      let gridOffsetX = 62;
+      let gridOffsetY = 109;
+
+      let lat = 43.655463;
+      let lng = -79.587222;
+      let map;
+      let mapRotation = 44;
+      let mapScale = 165;
+      let zoomLevel = 18;
+      let moveInterval;
+      let rectangleFormat = "letter"; // Default format
+      let isPortrait = true; // Default orientation
+
+      function changeUnit() {
+        unit = document.querySelector('input[name="unit"]:checked').value;
+        updateGridSize();
+      }
+
+      function updateGridSize() {
+        if (unit === "meters") {
+          smallCellMeters =
+            parseFloat(document.getElementById("smallCellMeter").value) || 1;
+          largeCellMeters =
+            parseFloat(document.getElementById("largeCellMeter").value) || 10;
+        }
+        if (unit === "feet") {
+          const smallFeet =
+            parseFloat(document.getElementById("smallCellFeet").value) || 12;
+          const largeFeet =
+            parseFloat(document.getElementById("largeCellFeet").value) || 60;
+          smallCellMeters = smallFeet * 0.3048;
+          largeCellMeters = largeFeet * 0.3048;
+        }
+        drawGrid();
+      }
+      function updateGridOffset() {
+        gridOffsetX = parseFloat(document.getElementById("gridOffsetX").value) || 0;
+        gridOffsetY = parseFloat(document.getElementById("gridOffsetY").value) || 0;
+        drawGrid();
+      }
+
+      function initMap() {
+        map = new Microsoft.Maps.Map("#map", {
+          center: new Microsoft.Maps.Location(lat, lng),
+          mapTypeId: Microsoft.Maps.MapTypeId.aerial,
+          labelOverlay: Microsoft.Maps.LabelOverlay.hidden,
+          zoom: 20,
+        });
+
+        applyZoom();
+        applyScale();
+        applyRotation();
+        updateRectangle();
+      }
+
+      function setCenter() {
+        lat = document.getElementById("latInput").value;
+        lng = document.getElementById("lngInput").value;
+        map.setView({
+          center: new Microsoft.Maps.Location(lat, lng),
+          zoom: map.getZoom(),
+        });
+      }
+
+      function rotateMap(degrees) {
+        if (degrees === 0) {
+          mapRotation = 0;
+        } else {
+          mapRotation = (mapRotation + degrees) % 360;
+        }
+        updateRotation();
+      }
+
+      function updateRotation() {
+        document.getElementById(
+          "map"
+        ).style.transform = `translate3d(-25%, -25%, 0) scale(${
+          mapScale / 100
+        }) rotate(${mapRotation}deg)`;
+        document.getElementById("rotationInput").value = mapRotation;
+      }
+
+      function applyRotation() {
+        const inputRotation = parseFloat(
+          document.getElementById("rotationInput").value
+        );
+        if (!isNaN(inputRotation)) {
+          mapRotation = inputRotation % 360;
+          updateRotation();
+        }
+      }
+
+      function scaleMap(delta) {
+        mapScale = Math.max(0, mapScale + delta);
+        document.getElementById("grid").style.transform = `scale(${
+          mapScale / 100
+        })`;
+        document.getElementById(
+          "map"
+        ).style.transform = `translate3d(-25%, -25%, 0) scale(${
+          mapScale / 100
+        }) rotate(${mapRotation}deg)`;
+        document.getElementById("scaleInput").value = mapScale;
+        updateGridSize();
+      }
+
+      function applyScale() {
+        const inputScale = parseFloat(
+          document.getElementById("scaleInput").value
+        );
+        if (!isNaN(inputScale)) {
+          mapScale = inputScale;
+          document.getElementById("grid").style.transform = `scale(${
+            mapScale / 100
+          })`;
+          document.getElementById(
+            "map"
+          ).style.transform = `translate3d(-25%, -25%, 0) scale(${
+            mapScale / 100
+          }) rotate(${mapRotation}deg)`;
+        }
+        updateGridSize();
+      }
+
+      function zoomMap(delta) {
+        zoomLevel = Math.max(0, zoomLevel + delta);
+        zoomNumber = Number(zoomLevel.toFixed(1));
+        map.setView({ zoom: zoomNumber });
+        document.getElementById("zoomInput").value = zoomNumber;
+        updateGridSize();
+      }
+
+      function applyZoom() {
+        const inputZoom = parseFloat(
+          document.getElementById("zoomInput").value
+        );
+        if (!isNaN(inputZoom)) {
+          zoomLevel = inputZoom;
+          map.setView({ zoom: zoomLevel });
+        }
+        updateGridSize();
+      }
+
+      function moveMap(direction) {
+        const moveDistance = 0.5; // Adjust this value as needed
+        const center = map.getCenter();
+        let lat = center.latitude;
+        let lng = center.longitude;
+        const radians = (Math.PI / 180) * mapRotation;
+
+        switch (direction) {
+          case "left":
+            lng += (moveDistance / 111320) * Math.cos(radians);
+            lat += (moveDistance / 111320) * Math.sin(radians);
+            break;
+          case "right":
+            lng -= (moveDistance / 111320) * Math.cos(radians);
+            lat -= (moveDistance / 111320) * Math.sin(radians);
+            break;
+          case "up":
+            lat -= (moveDistance / 111320) * Math.cos(radians);
+            lng += (moveDistance / 111320) * Math.sin(radians);
+            break;
+          case "down":
+            lat += (moveDistance / 111320) * Math.cos(radians);
+            lng -= (moveDistance / 111320) * Math.sin(radians);
+            break;
+        }
+
+        document.getElementById("latInput").value = Number(lat.toFixed(6));
+        document.getElementById("lngInput").value = Number(lng.toFixed(6));
+        map.setView({ center: new Microsoft.Maps.Location(lat, lng) });
+      }
+
+      function startMove(direction) {
+        moveMap(direction);
+        moveInterval = setInterval(() => moveMap(direction), 100);
+      }
+
+      function stopMove() {
+        clearInterval(moveInterval);
+      }
+
+      function drawGrid() {
+        const canvas = document.getElementById("gridCanvas");
+        const context = canvas.getContext("2d");
+        const bounds = map.getBounds();
+        const zoom = map.getZoom();
+
+        if (!bounds) return;
+
+        const scale = Math.pow(2, zoom);
+        const center = map.getCenter();
+        const metersPerPixel =
+          (156543.03392 * Math.cos((center.latitude * Math.PI) / 180)) / scale;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        const smallCellPixels = smallCellMeters / metersPerPixel;
+        const largeCellPixels = largeCellMeters / metersPerPixel;
+
+        const highlightStep =
+          parseInt(document.getElementById("highlightStep").value) || 3;
+
+        context.strokeStyle = "#000";
+        context.lineWidth = 0.2;
+        for (
+          let x = gridOffsetX % smallCellPixels;
+          x <= canvas.width;
+          x += smallCellPixels
+        ) {
+          context.beginPath();
+          context.moveTo(x, 0);
+          context.lineTo(x, canvas.height);
+          context.stroke();
+        }
+        for (
+          let y = gridOffsetY % smallCellPixels;
+          y <= canvas.height;
+          y += smallCellPixels
+        ) {
+          context.beginPath();
+          context.moveTo(0, y);
+          context.lineTo(canvas.width, y);
+          context.stroke();
+        }
+
+        context.lineWidth = 0.4;
+        let index = 0;
+        for (
+          let x = gridOffsetX % (largeCellPixels * 3);
+          x <= canvas.width;
+          x += largeCellPixels
+        ) {
+          // context.lineWidth = index % highlightStep === 0 ? 1 : 0.5;
+          context.strokeStyle = index % highlightStep === 0 ? "blue" : "red";
+          context.beginPath();
+          context.moveTo(x, 0);
+          context.lineTo(x, canvas.height);
+          context.stroke();
+          index++;
+        }
+
+        index = 0;
+        for (
+          let y = gridOffsetY % (largeCellPixels * 3);
+          y <= canvas.height;
+          y += largeCellPixels
+        ) {
+          context.strokeStyle = index % highlightStep === 0 ? "blue" : "red";
+          context.beginPath();
+          context.moveTo(0, y);
+          context.lineTo(canvas.width, y);
+          context.stroke();
+          index++;
+        }
+      }
+
+      function updateRectangle() {
+        const rectangle = document.getElementById("rectangle");
+        const darken = document.getElementById("darken");
+
+        const mapWidth = document.getElementById("map-container").offsetWidth;
+        const mapHeight = document.getElementById("map-container").offsetHeight;
+
+        let rectangleWidth, rectangleHeight;
+
+        if (rectangleFormat === "letter") {
+          if (isPortrait) {
+            rectangleWidth = (8.5 / 11) * mapHeight;
+            rectangleHeight = mapHeight;
+          } else {
+            rectangleWidth = mapWidth;
+            rectangleHeight = (11 / 8.5) * mapWidth;
+          }
+        } else if (rectangleFormat === "a4") {
+          if (isPortrait) {
+            rectangleWidth = (210 / 297) * mapHeight;
+            rectangleHeight = mapHeight;
+          } else {
+            rectangleWidth = mapWidth;
+            rectangleHeight = (297 / 210) * mapWidth;
+          }
+        }
+
+        rectangle.style.width = `${rectangleWidth}px`;
+        rectangle.style.height = `${rectangleHeight}px`;
+        rectangle.style.top = `${(mapHeight - rectangleHeight) / 2}px`;
+        rectangle.style.left = `${(mapWidth - rectangleWidth) / 2}px`;
+
+        darken.style.clipPath = `polygon(
+          0 0,
+          100% 0,
+          100% 100%,
+          0 100%,
+          0 ${(mapHeight - rectangleHeight) / 2}px,
+          ${(mapWidth - rectangleWidth) / 2}px ${
+          (mapHeight - rectangleHeight) / 2
+        }px,
+          ${(mapWidth - rectangleWidth) / 2}px ${
+          (mapHeight - rectangleHeight) / 2 + rectangleHeight
+        }px,
+          ${(mapWidth - rectangleWidth) / 2 + rectangleWidth}px ${
+          (mapHeight - rectangleHeight) / 2 + rectangleHeight
+        }px,
+          ${(mapWidth - rectangleWidth) / 2 + rectangleWidth}px ${
+          (mapHeight - rectangleHeight) / 2
+        }px,
+          ${(mapWidth - rectangleWidth) / 2}px ${
+          (mapHeight - rectangleHeight) / 2
+        }px
+        )`;
+      }
+
+      function setFormat(format) {
+        rectangleFormat = format;
+        updateRectangle();
+      }
+
+      function toggleOrientation() {
+        isPortrait = !isPortrait;
+        updateRectangle();
+      }
+
+      function saveSelection() {
+        const rectangle = document.getElementById("rectangle");
+        const mapElement = document.getElementById("mapCanvas");
+        const gridWrap = document.getElementById("grid");
+        const gridElement = document.getElementById("gridCanvas");
+        const mapContainer = document.getElementById("map-container");
+
+        html2canvas(mapContainer).then((mapCanvas) => {
+          const selectionCanvas = document.createElement("canvas");
+          const selectionContext = selectionCanvas.getContext("2d");
+
+          selectionCanvas.width = rectangle.offsetWidth;
+          selectionCanvas.height = rectangle.offsetHeight;
+
+          selectionContext.drawImage(
+            mapCanvas,
+            rectangle.offsetLeft,
+            rectangle.offsetTop,
+            rectangle.offsetWidth,
+            rectangle.offsetHeight,
+            0,
+            0,
+            selectionCanvas.width,
+            selectionCanvas.height
+          );
+
+          const link = document.createElement("a");
+          link.download = "map_selection.jpg";
+          link.href = selectionCanvas.toDataURL("image/jpeg");
+          link.click();
+        });
+      }
+
+      window.addEventListener("resize", updateRectangle);
+    </script>
+  </head>
+  <body>
+    <div id="map-container">
+      <canvas id="mapCanvas"></canvas>
+      <div id="map"></div>
+      <div id="darken"></div>
+      <div id="rectangle"></div>
+    </div>
+    <div id="grid" class="grid">
+      <canvas id="gridCanvas"></canvas>
+    </div>
+    <div class="controls">
+      <label>
+        Highlight every:
+        <input
+          type="number"
+          id="highlightStep"
+          value="3"
+          min="1"
+          oninput="drawGrid()"
+        />
+        lines
+      </label>
+      <br />
+      <label
+        >Small:
+        <input
+          type="number"
+          id="smallCellMeter"
+          value="1"
+          oninput="updateGridSize()"
+        />
+      </label>
+      <label
+        >Large:
+        <input
+          type="number"
+          id="largeCellMeter"
+          value="10"
+          oninput="updateGridSize()"
+        />
+      </label>
+      <label>
+        <input
+          type="radio"
+          name="unit"
+          value="meters"
+          onchange="changeUnit()"
+        />
+        Meters
+      </label>
+      <br />
+      <label
+        >Small:
+        <input
+          type="number"
+          id="smallCellFeet"
+          value="12"
+          oninput="updateGridSize()"
+        />
+      </label>
+      <label
+        >Large:
+        <input
+          type="number"
+          id="largeCellFeet"
+          value="60"
+          oninput="updateGridSize()"
+        />
+      </label>
+      <label>
+        <input
+          type="radio"
+          name="unit"
+          value="feet"
+          checked
+          onchange="changeUnit()"
+        />
+        Feet
+      </label>
+      <br />
+      <br />
+      <label>
+        Grid X:
+        <input type="number" id="gridOffsetX" value="62" step="1" oninput="updateGridOffset()" />
+      </label>
+      <label>
+        Grid Y:
+        <input type="number" id="gridOffsetY" value="109" step="1" oninput="updateGridOffset()" />
+      </label>
+      <br />
+
+      <input type="number" id="latInput" value="43.655463" />
+      <input type="number" id="lngInput" value="-79.587222" />
+      <button onclick="setCenter()">Apply Center</button>
+      <br />
+      <button
+        id="moveLeft"
+        onclick="moveMap('left')"
+        onmousedown="startMove('left')"
+        onmouseup="stopMove()"
+        onmouseleave="stopMove()"
+      >
+        Move Left
+      </button>
+      <button
+        id="moveRight"
+        onclick="moveMap('right')"
+        onmousedown="startMove('right')"
+        onmouseup="stopMove()"
+        onmouseleave="stopMove()"
+      >
+        Move Right
+      </button>
+      <button
+        id="moveUp"
+        onclick="moveMap('up')"
+        onmousedown="startMove('up')"
+        onmouseup="stopMove()"
+        onmouseleave="stopMove()"
+      >
+        Move Up
+      </button>
+      <button
+        id="moveDown"
+        onclick="moveMap('down')"
+        onmousedown="startMove('down')"
+        onmouseup="stopMove()"
+        onmouseleave="stopMove()"
+      >
+        Move Down
+      </button>
+      <br />
+      <input
+        type="number"
+        id="rotationInput"
+        value="44"
+        oninput="applyRotation()"
+      />
+      <button onclick="rotateMap(-1)">Rotate Left</button>
+      <button onclick="rotateMap(1)">Rotate Right</button>
+      <br />
+
+      <input type="number" id="scaleInput" value="165" oninput="applyScale()" />
+      <button onclick="scaleMap(-1)">Scale Out</button>
+      <button onclick="scaleMap(1)">Scale In</button>
+      <br />
+      <input type="number" id="zoomInput" value="18" oninput="applyZoom()" />
+      <button onclick="zoomMap(-1)">Zoom Out</button>
+      <button onclick="zoomMap(1)">Zoom In</button>
+      <br />
+      <button onclick="setFormat('letter')">Letter</button>
+      <button onclick="setFormat('a4')">A4</button>
+      <button onclick="toggleOrientation()">Toggle Orientation</button>
+      <button onclick="saveSelection()">Save Selection</button>
+    </div>
+  </body>
+</html>

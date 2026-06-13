@@ -1,0 +1,133 @@
+import { useEffect, useMemo, useState } from "react";
+import { CanvasPreview } from "./components/CanvasPreview";
+import { ControlPanel } from "./components/ControlPanel";
+import { DraggablePanel } from "./components/DraggablePanel";
+import { downloadPng } from "./lib/download";
+import { fetchMapSource } from "./lib/googleStaticMap";
+import { DEFAULT_SETTINGS, getExportSize } from "./lib/mapMath";
+import { printMap } from "./lib/print";
+import { loadSettings, saveSettings } from "./lib/storage";
+import type { MapSettings, MapSource } from "./types/map";
+
+function mapSourceKey(settings: MapSettings): string {
+  return [
+    settings.apiKey,
+    settings.latitude,
+    settings.longitude,
+    settings.zoom,
+    settings.resolutionMode,
+  ].join(":");
+}
+
+export default function App() {
+  const [settings, setSettings] = useState<MapSettings>(() => loadSettings());
+  const [source, setSource] = useState<MapSource | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const sourceKey = useMemo(() => mapSourceKey(settings), [settings]);
+  const exportSize = getExportSize(settings);
+  const displayWarnings = useMemo(() => {
+    const nextWarnings = [...warnings];
+    if (source) {
+      const diagonal = Math.sqrt(exportSize.width ** 2 + exportSize.height ** 2);
+      if (source.width < diagonal || source.height < diagonal) {
+        nextWarnings.push("Source image may be too low-resolution for this export size. Use High/Ultra mode.");
+      }
+    }
+
+    return [...new Set(nextWarnings)];
+  }, [exportSize.height, exportSize.width, source, warnings]);
+
+  useEffect(() => {
+    saveSettings(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!settings.apiKey.trim()) {
+      setSource(null);
+      setError(null);
+      setWarnings([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    fetchMapSource(settings)
+      .then((nextSource) => {
+        if (cancelled) {
+          return;
+        }
+        setSource(nextSource);
+        setWarnings(nextSource.warnings);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        setSource(null);
+        setError(err instanceof Error ? err.message : "Unable to load map source.");
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceKey]);
+
+  const requireSource = (): MapSource | null => {
+    if (!source) {
+      setError(settings.apiKey.trim() ? "Map source is still loading." : "Enter a Google Maps Static API key first.");
+      return null;
+    }
+
+    return source;
+  };
+
+  const handleDownload = () => {
+    const currentSource = requireSource();
+    if (!currentSource) {
+      return;
+    }
+    downloadPng(settings, currentSource);
+  };
+
+  const handlePrint = () => {
+    const currentSource = requireSource();
+    if (!currentSource) {
+      return;
+    }
+
+    try {
+      printMap(settings, currentSource);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to print export.");
+    }
+  };
+
+  return (
+    <div className="app">
+      <CanvasPreview settings={settings} source={source} loading={loading} error={error} warnings={displayWarnings} />
+      <DraggablePanel title="Map controls">
+        <div className="export-meta">
+          Export: {exportSize.width} x {exportSize.height}px
+        </div>
+        <ControlPanel
+          settings={settings}
+          onChange={setSettings}
+          onDownload={handleDownload}
+          onPrint={handlePrint}
+          onReset={() => setSettings(DEFAULT_SETTINGS)}
+          busy={loading}
+        />
+      </DraggablePanel>
+    </div>
+  );
+}

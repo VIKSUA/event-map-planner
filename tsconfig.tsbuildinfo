@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/canvaspreview.tsx","./src/components/controlpanel.tsx","./src/components/draggablepanel.tsx","./src/lib/download.ts","./src/lib/drawcanvas.ts","./src/lib/googlestaticmap.ts","./src/lib/mapmath.ts","./src/lib/print.ts","./src/lib/storage.ts","./src/types/map.ts"],"version":"6.0.3"}
