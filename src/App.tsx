@@ -18,7 +18,7 @@ function mapSourceKey(settings: MapSettings): string {
     settings.latitude,
     settings.longitude,
     settings.zoom,
-    settings.resolutionMode,
+    "standard",
   ].join(":");
 }
 
@@ -36,7 +36,7 @@ export default function App() {
     if (source) {
       const { mapDrawSize } = getMapDrawSize(exportSize, settings);
       if (source.width < mapDrawSize || source.height < mapDrawSize) {
-        nextWarnings.push("Source image may be too low-resolution for this export size. Use High/Ultra mode.");
+        nextWarnings.push("Standard source image may be too low-resolution for this export size.");
       }
     }
 
@@ -59,9 +59,10 @@ export default function App() {
 
     setLoading(true);
     setError(null);
-    addRequests(getRequestCostByResolutionMode(settings.resolutionMode));
+    addRequests(getRequestCostByResolutionMode("standard"));
 
-    fetchMapSource(settings)
+    // High/Ultra disabled: stitching repeats Google attribution and costs extra requests.
+    fetchMapSource({ ...settings, resolutionMode: "standard" })
       .then((nextSource) => {
         if (cancelled) {
           return;

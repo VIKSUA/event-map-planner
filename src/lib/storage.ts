@@ -82,6 +82,8 @@ export function normalizeSettings(settings: MapSettings): MapSettings {
     ...settings,
     activeAppearanceMode,
     appearanceByMode,
+    // High/Ultra disabled: stitching repeats Google attribution and costs extra requests.
+    resolutionMode: DEFAULT_SETTINGS.resolutionMode,
     zoom: clamp(Math.round(settings.zoom), MIN_ZOOM, MAX_ZOOM),
     scale: clamp(Math.round(settings.scale), MIN_SCALE, MAX_SCALE),
     smallGridLineWidth: clamp(Math.round(settings.smallGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),

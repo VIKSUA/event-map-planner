@@ -85,7 +85,7 @@ export function drawComposition(
   const { mapDrawSize } = getMapDrawSize(size, settings);
 
   if (source.width < mapDrawSize || source.height < mapDrawSize) {
-    warnings.push("Source image may be too low-resolution for this export size. Use High/Ultra mode.");
+    warnings.push("Standard source image may be too low-resolution for this export size.");
   }
 
   context.clearRect(0, 0, width, height);

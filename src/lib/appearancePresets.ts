@@ -20,7 +20,7 @@ export const DEFAULT_APPEARANCE_BY_MODE: Record<AppearanceMode, AppearanceSettin
     mapOpacity: 65,
     largeGridColor: "#555555",
     largeGridLineWidth: 2,
-    smallGridColor: "#A0A0A0",
+    smallGridColor: "#555555",
     smallGridLineWidth: 1,
   },
 };

@@ -15,7 +15,7 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import SaveIcon from "@mui/icons-material/Save";
 import { Box, Button, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
-import type { MapSettings, Orientation, PageFormat, ResolutionMode, Unit } from "../../types/map";
+import type { MapSettings, Orientation, PageFormat, Unit } from "../../types/map";
 import {
   MAX_GRID_LINE_WIDTH,
   MAX_MAP_FILTER_PERCENT,
@@ -63,17 +63,7 @@ export function ApiSourceSection({
       }
     >
       <CompactTextField label="Key" type="password" value={settings.apiKey} placeholder="Local only" onChange={(value) => update("apiKey", value)} />
-      <CompactSelectField<ResolutionMode>
-        label="Source"
-        value={settings.resolutionMode}
-        onChange={(value) => update("resolutionMode", value)}
-        options={[
-          { value: "standard", label: "Standard" },
-          { value: "high", label: "High 2x2" },
-          { value: "ultra", label: "Ultra 3x3" },
-        ]}
-      />
-      <Typography sx={{ gridColumn: "1 / -1", color: "text.secondary", fontSize: 11 }}>Standard +1, High +4, Ultra +9</Typography>
+      <Typography sx={{ alignSelf: "center", color: "text.secondary", fontSize: 11 }}>Standard only</Typography>
     </Section>
   );
 }

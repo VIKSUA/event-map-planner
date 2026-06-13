@@ -80,13 +80,11 @@ Google API key reminders for deployment:
 
 ## Rendering Notes
 
-Google Static Maps supports `size=640x640&scale=2`, which provides a 1280 x 1280 source image per request. The app can also stitch multiple Static Maps images in an offscreen canvas:
+Google Static Maps supports `size=640x640&scale=2`, which provides a 1280 x 1280 source image per request. The current UI uses Standard mode only:
 
 - Standard: one 1280 px source
-- High: 2x2 stitching
-- Ultra: 3x3 stitching
 
-High or Ultra mode may be needed for 4K and print exports because the final export can be much larger than a single Static Maps image. If the source is likely too low-resolution for the selected export size, the app shows a warning.
+High and Ultra stitching logic is kept in code for later, but disabled for now because stitched Static Maps repeat Google attribution and cost extra requests. If the source is likely too low-resolution for the selected export size, the app shows a warning.
 
 The grid is rendered directly into the final canvas after the map has been drawn. It does not rotate with the map and is not CSS-scaled, so lines stay sharp on high-DPI screens and in exported PNGs.
 
