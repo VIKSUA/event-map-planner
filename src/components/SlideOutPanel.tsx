@@ -7,13 +7,14 @@ import { Box, IconButton, Tooltip } from "@mui/material";
 interface SlideOutPanelProps {
   children: ReactNode;
   defaultCollapsed?: boolean;
+  expandSignal?: number;
   storageKey?: string;
   width?: number;
 }
 
 const HANDLE_WIDTH = 30;
 
-export function SlideOutPanel({ children, defaultCollapsed = false, storageKey, width = 360 }: SlideOutPanelProps) {
+export function SlideOutPanel({ children, defaultCollapsed = false, expandSignal, storageKey, width = 360 }: SlideOutPanelProps) {
   const [collapsed, setCollapsed] = useState(() => {
     if (!storageKey) {
       return defaultCollapsed;
@@ -38,6 +39,14 @@ export function SlideOutPanel({ children, defaultCollapsed = false, storageKey, 
       console.warn("Unable to save overlay panel state.", error);
     }
   }, [collapsed, storageKey]);
+
+  useEffect(() => {
+    if (expandSignal === undefined) {
+      return;
+    }
+
+    setCollapsed(false);
+  }, [expandSignal]);
 
   return (
     <Box

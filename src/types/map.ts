@@ -3,6 +3,19 @@ export type PageFormat = "square" | "letter" | "a4";
 export type Orientation = "portrait" | "landscape";
 export type ResolutionMode = "standard" | "high" | "ultra";
 export type AppearanceMode = "screen" | "printBw";
+export type PaintMode = "off" | "pick" | "brush";
+
+export interface PaintPoint {
+  x: number;
+  y: number;
+}
+
+export interface PaintStroke {
+  id: string;
+  color: string;
+  radius: number;
+  points: PaintPoint[];
+}
 
 export interface AppearanceSettings {
   mapGrayscale: boolean;
@@ -47,6 +60,11 @@ export interface MapSettings {
   mapOpacity: number;
   showGrid: boolean;
   resolutionMode: ResolutionMode;
+  paintMode: PaintMode;
+  paintColor: string;
+  paintBrushRadius: number;
+  paintSampleSize: number;
+  paintStrokes: PaintStroke[];
 }
 
 export interface ExportSize {

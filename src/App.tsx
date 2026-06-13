@@ -28,6 +28,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [paintPanelSignal, setPaintPanelSignal] = useState(0);
   const { requestCount, addRequests, resetRequests } = useGoogleRequestCounter();
   const sourceKey = useMemo(() => mapSourceKey(settings), [settings]);
   const exportSize = getExportSize(settings);
@@ -124,7 +125,16 @@ export default function App() {
 
   return (
     <div className="app">
-      <CanvasPreview settings={settings} source={source} loading={loading} error={error} warnings={displayWarnings} onPanEnd={handlePanEnd} />
+      <CanvasPreview
+        settings={settings}
+        source={source}
+        loading={loading}
+        error={error}
+        warnings={displayWarnings}
+        onChange={setSettings}
+        onPanEnd={handlePanEnd}
+        paintPanelSignal={paintPanelSignal}
+      />
       <DraggablePanel
         title="Map controls"
         headerAction={
@@ -142,6 +152,7 @@ export default function App() {
           onChange={setSettings}
           onDownload={handleDownload}
           onPrint={handlePrint}
+          onOpenPaintTools={() => setPaintPanelSignal((value) => value + 1)}
           onReset={() => setSettings(DEFAULT_SETTINGS)}
           requestCount={requestCount}
           onAddRequests={addRequests}

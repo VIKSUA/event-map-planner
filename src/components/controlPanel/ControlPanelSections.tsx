@@ -3,6 +3,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import BrushIcon from "@mui/icons-material/Brush";
 import DownloadIcon from "@mui/icons-material/Download";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import LockIcon from "@mui/icons-material/Lock";
@@ -313,6 +314,7 @@ export function StickyActionFooter({
   onLoadSaved,
   onDownload,
   onPrint,
+  onOpenPaintTools,
   onReset,
   onSave,
   busy,
@@ -320,6 +322,7 @@ export function StickyActionFooter({
   onLoadSaved: () => void;
   onDownload: () => void;
   onPrint: () => void;
+  onOpenPaintTools: () => void;
   onReset: () => void;
   onSave: () => void;
   busy: boolean;
@@ -344,6 +347,9 @@ export function StickyActionFooter({
         </Button>
         <Button size="small" variant="outlined" startIcon={<FolderOpenIcon />} onClick={onLoadSaved}>
           Load
+        </Button>
+        <Button size="small" variant="outlined" startIcon={<BrushIcon />} onClick={onOpenPaintTools}>
+          Paint
         </Button>
         <Button size="small" variant="contained" startIcon={<DownloadIcon />} onClick={onDownload} disabled={busy}>
           PNG

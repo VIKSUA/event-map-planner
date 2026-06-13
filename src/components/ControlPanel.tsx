@@ -42,6 +42,7 @@ interface ControlPanelProps {
   onChange: (settings: MapSettings) => void;
   onDownload: () => void;
   onPrint: () => void;
+  onOpenPaintTools: () => void;
   onReset: () => void;
   requestCount: number;
   onAddRequests: (amount: number) => void;
@@ -87,6 +88,7 @@ export function ControlPanel({
   onChange,
   onDownload,
   onPrint,
+  onOpenPaintTools,
   onReset,
   requestCount,
   onAddRequests,
@@ -268,6 +270,7 @@ export function ControlPanel({
           onLoadSaved={handleOpenSavedLayouts}
           onDownload={onDownload}
           onPrint={onPrint}
+          onOpenPaintTools={onOpenPaintTools}
           onReset={onReset}
           onSave={handleSaveLayout}
           busy={busy}

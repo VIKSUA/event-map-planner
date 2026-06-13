@@ -1,4 +1,4 @@
-import type { ExportSize, MapSettings, MapSource } from "../types/map";
+import type { ExportSize, MapSettings, MapSource, PaintStroke } from "../types/map";
 import { getExportSize, getGridMetrics, getMapDrawSize } from "./mapMath";
 
 export interface RenderResult {
@@ -7,6 +7,7 @@ export interface RenderResult {
 }
 
 export interface DrawCompositionOptions {
+  additionalPaintStrokes?: PaintStroke[];
   mapOffset?: { x: number; y: number };
 }
 
@@ -25,6 +26,44 @@ function mapFilter(settings: MapSettings): string {
     `contrast(${Math.max(0, settings.mapContrast)}%)`,
     `saturate(${Math.max(0, settings.mapSaturation)}%)`,
   ].join(" ");
+}
+
+function fillCanvasBackground(context: CanvasRenderingContext2D, width: number, height: number): void {
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = "#f3f4f6";
+  context.fillRect(0, 0, width, height);
+}
+
+function drawMapLayer(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  settings: MapSettings,
+  source: MapSource,
+  mapOffset: { x: number; y: number } = { x: 0, y: 0 },
+): void {
+  const { mapDrawSize } = getMapDrawSize({ width, height }, settings);
+
+  context.save();
+  context.globalAlpha = Math.max(0, Math.min(100, settings.mapOpacity)) / 100;
+  context.filter = mapFilter(settings);
+  context.translate(width / 2 + mapOffset.x, height / 2 + mapOffset.y);
+  context.rotate((settings.rotation * Math.PI) / 180);
+  context.drawImage(source.image, -mapDrawSize / 2, -mapDrawSize / 2, mapDrawSize, mapDrawSize);
+  context.restore();
+}
+
+function drawPaintStrokes(context: CanvasRenderingContext2D, strokes: PaintStroke[]): void {
+  for (const stroke of strokes) {
+    context.save();
+    context.fillStyle = stroke.color;
+    for (const point of stroke.points) {
+      context.beginPath();
+      context.arc(point.x, point.y, stroke.radius, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.restore();
+  }
 }
 
 function drawGrid(
@@ -83,28 +122,35 @@ export function drawComposition(
   const warnings = [...source.warnings];
   const { width, height } = size;
   const { mapDrawSize } = getMapDrawSize(size, settings);
+  const paintStrokes = [...settings.paintStrokes, ...(options.additionalPaintStrokes ?? [])];
 
   if (source.width < mapDrawSize || source.height < mapDrawSize) {
     warnings.push("Standard source image may be too low-resolution for this export size.");
   }
 
-  context.clearRect(0, 0, width, height);
-  context.fillStyle = "#f3f4f6";
-  context.fillRect(0, 0, width, height);
-
-  context.save();
-  context.globalAlpha = Math.max(0, Math.min(100, settings.mapOpacity)) / 100;
-  context.filter = mapFilter(settings);
-  context.translate(width / 2 + (options.mapOffset?.x ?? 0), height / 2 + (options.mapOffset?.y ?? 0));
-  context.rotate((settings.rotation * Math.PI) / 180);
-  context.drawImage(source.image, -mapDrawSize / 2, -mapDrawSize / 2, mapDrawSize, mapDrawSize);
-  context.restore();
+  fillCanvasBackground(context, width, height);
+  drawMapLayer(context, width, height, settings, source, options.mapOffset);
+  drawPaintStrokes(context, paintStrokes);
 
   if (settings.showGrid) {
     drawGrid(context, width, height, settings, source);
   }
 
   return [...new Set(warnings)];
+}
+
+export function renderMapOnlyCanvas(settings: MapSettings, source: MapSource, size: ExportSize): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = size.width;
+  canvas.height = size.height;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("Canvas is not available in this browser.");
+  }
+
+  fillCanvasBackground(context, size.width, size.height);
+  drawMapLayer(context, size.width, size.height, settings, source);
+  return canvas;
 }
 
 export function renderExportCanvas(settings: MapSettings, source: MapSource): RenderResult {
