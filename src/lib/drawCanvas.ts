@@ -1,5 +1,5 @@
 import type { ExportSize, MapSettings, MapSource } from "../types/map";
-import { getExportSize, getGridMetrics } from "./mapMath";
+import { getExportSize, getGridMetrics, getMapDrawSize } from "./mapMath";
 
 export interface RenderResult {
   canvas: HTMLCanvasElement;
@@ -10,8 +10,14 @@ function snapCoordinate(value: number, lineWidth: number): number {
   return lineWidth === 1 ? Math.round(value) + 0.5 : Math.round(value);
 }
 
-function drawGrid(context: CanvasRenderingContext2D, width: number, height: number, settings: MapSettings): void {
-  const { smallGridStepPx: smallStep, largeGridStepPx: largeStep } = getGridMetrics(settings);
+function drawGrid(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  settings: MapSettings,
+  source: MapSource,
+): void {
+  const { smallGridStepPx: smallStep, largeGridStepPx: largeStep } = getGridMetrics(settings, { width, height }, source);
 
   if (smallStep < 2 || largeStep < 2) {
     return;
@@ -58,11 +64,9 @@ export function drawComposition(
 ): string[] {
   const warnings = [...source.warnings];
   const { width, height } = size;
-  const diagonal = Math.sqrt(width ** 2 + height ** 2);
-  const scaleFactor = settings.scale / 100;
-  const drawSizeBeforeScale = diagonal / Math.max(scaleFactor, 0.01);
+  const { mapDrawSize } = getMapDrawSize(size, settings);
 
-  if (source.width < diagonal || source.height < diagonal) {
+  if (source.width < mapDrawSize || source.height < mapDrawSize) {
     warnings.push("Source image may be too low-resolution for this export size. Use High/Ultra mode.");
   }
 
@@ -74,12 +78,11 @@ export function drawComposition(
   context.globalAlpha = Math.max(0, Math.min(100, settings.mapOpacity)) / 100;
   context.translate(width / 2, height / 2);
   context.rotate((settings.rotation * Math.PI) / 180);
-  context.scale(scaleFactor, scaleFactor);
-  context.drawImage(source.image, -drawSizeBeforeScale / 2, -drawSizeBeforeScale / 2, drawSizeBeforeScale, drawSizeBeforeScale);
+  context.drawImage(source.image, -mapDrawSize / 2, -mapDrawSize / 2, mapDrawSize, mapDrawSize);
   context.restore();
 
   if (settings.showGrid) {
-    drawGrid(context, width, height, settings);
+    drawGrid(context, width, height, settings, source);
   }
 
   return [...new Set(warnings)];

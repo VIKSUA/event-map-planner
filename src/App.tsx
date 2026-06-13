@@ -4,7 +4,7 @@ import { ControlPanel } from "./components/ControlPanel";
 import { DraggablePanel } from "./components/DraggablePanel";
 import { downloadPng } from "./lib/download";
 import { fetchMapSource } from "./lib/googleStaticMap";
-import { DEFAULT_SETTINGS, getExportSize } from "./lib/mapMath";
+import { DEFAULT_SETTINGS, getExportSize, getMapDrawSize } from "./lib/mapMath";
 import { printMap } from "./lib/print";
 import { loadSettings, saveSettings } from "./lib/storage";
 import type { MapSettings, MapSource } from "./types/map";
@@ -30,14 +30,14 @@ export default function App() {
   const displayWarnings = useMemo(() => {
     const nextWarnings = [...warnings];
     if (source) {
-      const diagonal = Math.sqrt(exportSize.width ** 2 + exportSize.height ** 2);
-      if (source.width < diagonal || source.height < diagonal) {
+      const { mapDrawSize } = getMapDrawSize(exportSize, settings);
+      if (source.width < mapDrawSize || source.height < mapDrawSize) {
         nextWarnings.push("Source image may be too low-resolution for this export size. Use High/Ultra mode.");
       }
     }
 
     return [...new Set(nextWarnings)];
-  }, [exportSize.height, exportSize.width, source, warnings]);
+  }, [exportSize, settings, source, warnings]);
 
   useEffect(() => {
     saveSettings(settings);

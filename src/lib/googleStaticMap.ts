@@ -59,6 +59,9 @@ export async function fetchMapSource(settings: MapSettings): Promise<MapSource> 
       image,
       width: SOURCE_PIXEL_SIZE,
       height: SOURCE_PIXEL_SIZE,
+      googleStaticScale: SOURCE_SCALE,
+      requestedStaticLogicalSize: SOURCE_LOGICAL_SIZE,
+      tileCount: 1,
       warnings: [],
     };
   }
@@ -91,6 +94,9 @@ export async function fetchMapSource(settings: MapSettings): Promise<MapSource> 
     image: canvas,
     width: canvas.width,
     height: canvas.height,
+    googleStaticScale: SOURCE_SCALE,
+    requestedStaticLogicalSize: SOURCE_LOGICAL_SIZE,
+    tileCount: matrix as 2 | 3,
     warnings: [],
   };
 }

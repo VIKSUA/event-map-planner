@@ -1,4 +1,4 @@
-import type { ExportSize, MapSettings, Orientation, PageFormat } from "../types/map";
+import type { ExportSize, MapRenderMetrics, MapSettings, MapSource, Orientation, PageFormat } from "../types/map";
 
 const EARTH_CIRCUMFERENCE_METERS_PER_PIXEL = 156543.03392;
 const EARTH_RADIUS_METERS = 6378137;
@@ -34,10 +34,6 @@ export function metersPerPixel(latitude: number, zoom: number): number {
   return (EARTH_CIRCUMFERENCE_METERS_PER_PIXEL * Math.cos(latitudeRadians)) / 2 ** zoom;
 }
 
-export function effectiveMetersPerPixel(settings: MapSettings): number {
-  return metersPerPixel(settings.latitude, settings.zoom) / (settings.scale / 100);
-}
-
 export function getGridMeters(settings: MapSettings): { small: number; large: number } {
   if (settings.unit === "feet") {
     return {
@@ -52,24 +48,39 @@ export function getGridMeters(settings: MapSettings): { small: number; large: nu
   };
 }
 
-export function getGridMetrics(settings: MapSettings): {
-  metersPerPixel: number;
-  scaleFactor: number;
-  effectiveMetersPerPixel: number;
-  smallGridStepPx: number;
-  largeGridStepPx: number;
-} {
+export function getMapDrawSize(size: ExportSize, settings: MapSettings): { baseMapDrawSize: number; mapDrawSize: number; userScaleFactor: number } {
+  const baseMapDrawSize = Math.sqrt(size.width ** 2 + size.height ** 2);
+  const userScaleFactor = Math.max(settings.scale / 100, 0.01);
+  return {
+    baseMapDrawSize,
+    mapDrawSize: baseMapDrawSize * userScaleFactor,
+    userScaleFactor,
+  };
+}
+
+export function getGridMetrics(settings: MapSettings, size: ExportSize, source: MapSource): MapRenderMetrics {
   const gridMeters = getGridMeters(settings);
-  const baseMetersPerPixel = metersPerPixel(settings.latitude, settings.zoom);
-  const scaleFactor = settings.scale / 100;
-  const scaledMetersPerPixel = baseMetersPerPixel / scaleFactor;
+  const webMercatorMetersPerPixel = metersPerPixel(settings.latitude, settings.zoom);
+  const { baseMapDrawSize, mapDrawSize, userScaleFactor } = getMapDrawSize(size, settings);
+  const sourceMetersPerImagePixel = webMercatorMetersPerPixel / source.googleStaticScale;
+  const sourceToCanvasScale = mapDrawSize / source.width;
+  const effectiveMetersPerCanvasPixel = sourceMetersPerImagePixel / sourceToCanvasScale;
 
   return {
-    metersPerPixel: baseMetersPerPixel,
-    scaleFactor,
-    effectiveMetersPerPixel: scaledMetersPerPixel,
-    smallGridStepPx: gridMeters.small / scaledMetersPerPixel,
-    largeGridStepPx: gridMeters.large / scaledMetersPerPixel,
+    webMercatorMetersPerPixel,
+    googleStaticScale: source.googleStaticScale,
+    sourceImageWidth: source.width,
+    sourceImageHeight: source.height,
+    requestedStaticLogicalSize: source.requestedStaticLogicalSize,
+    tileCount: source.tileCount,
+    baseMapDrawSize,
+    mapDrawSize,
+    userScaleFactor,
+    sourceToCanvasScale,
+    totalMapScale: sourceToCanvasScale,
+    effectiveMetersPerCanvasPixel,
+    smallGridStepPx: gridMeters.small / effectiveMetersPerCanvasPixel,
+    largeGridStepPx: gridMeters.large / effectiveMetersPerCanvasPixel,
   };
 }
 

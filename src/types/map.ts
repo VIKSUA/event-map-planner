@@ -34,7 +34,27 @@ export interface MapSource {
   image: CanvasImageSource;
   width: number;
   height: number;
+  googleStaticScale: number;
+  requestedStaticLogicalSize: number;
+  tileCount: 1 | 2 | 3;
   warnings: string[];
+}
+
+export interface MapRenderMetrics {
+  webMercatorMetersPerPixel: number;
+  googleStaticScale: number;
+  sourceImageWidth: number;
+  sourceImageHeight: number;
+  requestedStaticLogicalSize: number;
+  tileCount: number;
+  baseMapDrawSize: number;
+  mapDrawSize: number;
+  userScaleFactor: number;
+  sourceToCanvasScale: number;
+  totalMapScale: number;
+  effectiveMetersPerCanvasPixel: number;
+  smallGridStepPx: number;
+  largeGridStepPx: number;
 }
 
 export interface PanelPosition {

@@ -33,7 +33,7 @@ export function CanvasPreview({ settings, source, loading, error, warnings }: Ca
   const [previewSize, setPreviewSize] = useState<ExportSize>({ width: 800, height: 800 });
   const exportSize = getExportSize(settings);
   const previewScale = previewSize.width / exportSize.width;
-  const gridMetrics = getGridMetrics(settings);
+  const gridMetrics = source ? getGridMetrics(settings, exportSize, source) : null;
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -87,17 +87,26 @@ export function CanvasPreview({ settings, source, loading, error, warnings }: Ca
         {warnings.map((warning) => (
           <div className="status status-warning" key={warning}>{warning}</div>
         ))}
-        <div className="status debug-metrics">
-          <strong>Grid debug</strong>
-          <span>export: {exportSize.width} x {exportSize.height}px</span>
-          <span>previewScale: {formatMetric(previewScale)}</span>
-          <span>metersPerPixel: {formatMetric(gridMetrics.metersPerPixel)}</span>
-          <span>effectiveMetersPerPixel: {formatMetric(gridMetrics.effectiveMetersPerPixel)}</span>
-          <span>smallGridStepPx: {formatMetric(gridMetrics.smallGridStepPx)}</span>
-          <span>largeGridStepPx: {formatMetric(gridMetrics.largeGridStepPx)}</span>
-          <span>unit: {settings.unit}</span>
-          <span>scaleFactor: {formatMetric(gridMetrics.scaleFactor)}</span>
-        </div>
+        {gridMetrics && (
+          <div className="status debug-metrics">
+            <strong>Grid debug</strong>
+            <span>export: {exportSize.width} x {exportSize.height}px</span>
+            <span>previewScale: {formatMetric(previewScale)}</span>
+            <span>webMpp: {formatMetric(gridMetrics.webMercatorMetersPerPixel)}</span>
+            <span>googleScale: {gridMetrics.googleStaticScale}</span>
+            <span>source: {gridMetrics.sourceImageWidth} x {gridMetrics.sourceImageHeight}px</span>
+            <span>logical/tile: {gridMetrics.requestedStaticLogicalSize}px</span>
+            <span>tileCount: {gridMetrics.tileCount}</span>
+            <span>mapDrawSize: {formatMetric(gridMetrics.mapDrawSize)}px</span>
+            <span>sourceToCanvas: {formatMetric(gridMetrics.sourceToCanvasScale)}</span>
+            <span>totalMapScale: {formatMetric(gridMetrics.totalMapScale)}</span>
+            <span>userScale: {formatMetric(gridMetrics.userScaleFactor)}</span>
+            <span>effectiveMpp: {formatMetric(gridMetrics.effectiveMetersPerCanvasPixel)}</span>
+            <span>smallStep: {formatMetric(gridMetrics.smallGridStepPx)}px</span>
+            <span>largeStep: {formatMetric(gridMetrics.largeGridStepPx)}px</span>
+            <span>unit: {settings.unit}</span>
+          </div>
+        )}
       </div>
     </main>
   );
