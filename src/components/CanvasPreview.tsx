@@ -49,17 +49,20 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
   const previewScale = previewSize.width / exportSize.width;
   const gridMetrics = source ? getGridMetrics(settings, exportSize, source) : null;
   const isPaintActive = settings.paintMode !== "pan";
+  const isDemoMode = !settings.apiKey.trim();
   const { dragOffset, isDragging, isPanLocked, isMapUpdatingAfterDrag, dragHandlers } = useMapDragPan({
     settings,
     source,
     exportSize,
     previewScale,
     loadError: error,
+    canDragPan: !isDemoMode,
     onPanEnd,
   });
   const statusItems = [
     loading ? { kind: "default", text: "Loading Google Static Maps source..." } : null,
     isMapUpdatingAfterDrag ? { kind: "default", text: "Updating map..." } : null,
+    isDemoMode ? { kind: "warning", text: "Demo map is fixed. Add API key for live map movement." } : null,
     error ? { kind: "error", text: error } : null,
     ...warnings.map((warning) => ({ kind: "warning", text: warning })),
   ].filter((item): item is { kind: string; text: string } => Boolean(item));
@@ -209,9 +212,9 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
     <main ref={wrapperRef} className="preview-shell">
       <div
         className={`canvas-card ${isDragging ? "is-dragging" : ""} ${isPanLocked ? "is-pan-locked" : ""}`}
-        style={{ width: previewSize.width, height: previewSize.height, cursor: isPanLocked ? "wait" : isPaintActive ? "crosshair" : undefined }}
-        title={isPanLocked ? "Updating map..." : isPaintActive ? "Paint editor active" : "Drag map to move"}
-        {...(isPaintActive ? paintHandlers : dragHandlers)}
+        style={{ width: previewSize.width, height: previewSize.height, cursor: isPanLocked ? "wait" : isPaintActive ? "crosshair" : isDemoMode ? "not-allowed" : undefined }}
+        title={isPanLocked ? "Updating map..." : isPaintActive ? "Paint editor active" : isDemoMode ? "Add API key to move live map" : "Drag map to move"}
+        {...(isPaintActive ? paintHandlers : isDemoMode ? {} : dragHandlers)}
       >
         <canvas ref={canvasRef} aria-label="Map export preview" />
         {!source && (

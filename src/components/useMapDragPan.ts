@@ -24,10 +24,11 @@ interface UseMapDragPanProps {
   exportSize: ExportSize;
   previewScale: number;
   loadError: string | null;
+  canDragPan: boolean;
   onPanEnd: (latitude: number, longitude: number) => void;
 }
 
-export function useMapDragPan({ settings, source, exportSize, previewScale, loadError, onPanEnd }: UseMapDragPanProps) {
+export function useMapDragPan({ settings, source, exportSize, previewScale, loadError, canDragPan, onPanEnd }: UseMapDragPanProps) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isPanLocked, setIsPanLocked] = useState(false);
@@ -72,7 +73,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, load
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
-      if (!source || isPanLocked || event.button !== 0) {
+      if (!canDragPan || !source || isPanLocked || event.button !== 0) {
         return;
       }
 
@@ -93,7 +94,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, load
       setDragOffset({ x: 0, y: 0 });
       setIsDragging(true);
     },
-    [exportSize, isPanLocked, previewScale, settings, source],
+    [canDragPan, exportSize, isPanLocked, previewScale, settings, source],
   );
 
   const handlePointerMove = useCallback(

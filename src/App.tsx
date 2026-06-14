@@ -53,7 +53,7 @@ export default function App() {
     let cancelled = false;
 
     if (!settings.apiKey.trim()) {
-      setLoading(true);
+      setLoading(false);
       setError(null);
       fetchDemoMapSource()
         .then((demoSource) => {
