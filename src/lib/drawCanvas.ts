@@ -33,6 +33,10 @@ export function getSampledAnnotationFilter(settings: MapSettings): string {
   return getMapAppearanceFilter(settings);
 }
 
+export function getMapOpacity(settings: MapSettings): number {
+  return Math.max(0, Math.min(100, settings.mapOpacity)) / 100;
+}
+
 function fillCanvasBackground(context: CanvasRenderingContext2D, width: number, height: number): void {
   context.clearRect(0, 0, width, height);
   context.fillStyle = "#f3f4f6";
@@ -52,7 +56,7 @@ function drawMapLayer(
   const { mapDrawSize } = getMapDrawSize({ width, height }, settings);
 
   context.save();
-  context.globalAlpha = applyOpacity ? Math.max(0, Math.min(100, settings.mapOpacity)) / 100 : 1;
+  context.globalAlpha = applyOpacity ? getMapOpacity(settings) : 1;
   context.filter = applyAppearance ? getMapAppearanceFilter(settings) : "none";
   context.translate(width / 2 + mapOffset.x, height / 2 + mapOffset.y);
   context.rotate((settings.rotation * Math.PI) / 180);
@@ -128,13 +132,14 @@ export function drawComposition(
   drawMapLayer(context, width, height, settings, source, options.mapOffset);
 
   const annotationFilter = getSampledAnnotationFilter(settings);
-  drawAnnotations(context, belowGridAnnotations, annotationFilter, size);
+  const annotationOpacity = getMapOpacity(settings);
+  drawAnnotations(context, belowGridAnnotations, annotationFilter, annotationOpacity, size);
 
   if (settings.showGrid) {
     drawGrid(context, width, height, settings, source);
   }
 
-  drawAnnotations(context, aboveGridAnnotations, annotationFilter, size);
+  drawAnnotations(context, aboveGridAnnotations, annotationFilter, annotationOpacity, size);
 
   return [...new Set(warnings)];
 }

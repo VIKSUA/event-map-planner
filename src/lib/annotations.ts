@@ -160,7 +160,7 @@ function drawAnnotationShape(context: CanvasRenderingContext2D, annotation: Anno
   }
 }
 
-function drawFilteredAnnotation(context: CanvasRenderingContext2D, annotation: Annotation, appearanceFilter: string, size: ExportSize): void {
+function drawFilteredAnnotation(context: CanvasRenderingContext2D, annotation: Annotation, appearanceFilter: string, opacity: number, size: ExportSize): void {
   const layerCanvas = document.createElement("canvas");
   layerCanvas.width = size.width;
   layerCanvas.height = size.height;
@@ -173,24 +173,27 @@ function drawFilteredAnnotation(context: CanvasRenderingContext2D, annotation: A
 
   context.save();
   context.filter = appearanceFilter;
+  context.globalAlpha = opacity;
   context.drawImage(layerCanvas, 0, 0);
   context.restore();
 }
 
-export function drawAnnotations(context: CanvasRenderingContext2D, annotations: Annotation[], appearanceFilter: string, size: ExportSize): void {
+export function drawAnnotations(context: CanvasRenderingContext2D, annotations: Annotation[], appearanceFilter: string, opacity: number, size: ExportSize): void {
   for (const annotation of annotations) {
     const normalizedAnnotation = normalizeAnnotationColor(annotation);
 
     if (shouldAnnotationUseMapFilter(normalizedAnnotation)) {
-      drawFilteredAnnotation(context, normalizedAnnotation, appearanceFilter, size);
+      drawFilteredAnnotation(context, normalizedAnnotation, appearanceFilter, opacity, size);
       continue;
     }
 
     context.save();
     context.filter = "none";
+    context.globalAlpha = 1;
     drawAnnotationShape(context, normalizedAnnotation);
     context.restore();
   }
 
   context.filter = "none";
+  context.globalAlpha = 1;
 }
