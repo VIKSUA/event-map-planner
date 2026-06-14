@@ -151,7 +151,7 @@ export default function App() {
           onChange={setSettings}
           onDownload={handleDownload}
           onPrint={handlePrint}
-          onReset={() => setSettings(DEFAULT_SETTINGS)}
+          onReset={() => setSettings((currentSettings) => ({ ...DEFAULT_SETTINGS, apiKey: currentSettings.apiKey }))}
           requestCount={requestCount}
           onAddRequests={addRequests}
           onResetRequestCount={resetRequests}
