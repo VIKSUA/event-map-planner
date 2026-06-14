@@ -18,6 +18,7 @@ function mapSourceKey(settings: MapSettings): string {
     settings.latitude,
     settings.longitude,
     settings.zoom,
+    settings.mapLabelsEnabled ? "labels" : "no-labels",
     "standard",
   ].join(":");
 }

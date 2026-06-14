@@ -24,7 +24,7 @@ function buildStaticMapUrl(settings: MapSettings, latitude: number, longitude: n
   url.searchParams.set("zoom", String(settings.zoom));
   url.searchParams.set("size", `${SOURCE_LOGICAL_SIZE}x${SOURCE_LOGICAL_SIZE}`);
   url.searchParams.set("scale", String(SOURCE_SCALE));
-  url.searchParams.set("maptype", "satellite");
+  url.searchParams.set("maptype", settings.mapLabelsEnabled ? "hybrid" : "satellite");
   url.searchParams.set("key", settings.apiKey);
   return url.toString();
 }

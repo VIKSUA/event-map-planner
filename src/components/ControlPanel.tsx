@@ -19,6 +19,7 @@ import {
   DEFAULT_LARGE_GRID_METERS,
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
+  DEFAULT_MAP_LABELS_ENABLED,
   DEFAULT_MOVE_STEP_METERS,
   DEFAULT_RESOLUTION_MODE,
   DEFAULT_ROTATION,
@@ -154,7 +155,7 @@ export function ControlPanel({
   };
   const resetRotation = () => update("rotation", DEFAULT_ROTATION);
   const toggleZoomScaleLock = () => update("isZoomScaleLocked", !settings.isZoomScaleLocked);
-  const resetSource = () => update("resolutionMode", DEFAULT_RESOLUTION_MODE);
+  const resetSource = () => onChange({ ...settings, mapLabelsEnabled: DEFAULT_MAP_LABELS_ENABLED, resolutionMode: DEFAULT_RESOLUTION_MODE });
   const resetLocation = () => onChange({ ...settings, latitude: DEFAULT_LATITUDE, longitude: DEFAULT_LONGITUDE });
   const resetAppearance = () => onChange(resetAppearanceMode(settings));
   const resetGrid = () => {

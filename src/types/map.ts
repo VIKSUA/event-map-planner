@@ -93,6 +93,7 @@ export interface MapSettings {
   latitude: number;
   longitude: number;
   zoom: number;
+  mapLabelsEnabled: boolean;
   rotation: number;
   scale: number;
   isZoomScaleLocked: boolean;

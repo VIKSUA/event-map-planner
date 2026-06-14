@@ -14,7 +14,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import SaveIcon from "@mui/icons-material/Save";
-import { Box, Button, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { MapSettings, Orientation, PageFormat, Unit } from "../../types/map";
 import {
   MAX_GRID_LINE_WIDTH,
@@ -63,7 +63,24 @@ export function ApiSourceSection({
       }
     >
       <CompactTextField label="Key" type="password" value={settings.apiKey} placeholder="Local only" onChange={(value) => update("apiKey", value)} />
-      <Typography sx={{ alignSelf: "center", color: "text.secondary", fontSize: 11 }}>Standard only</Typography>
+      <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+        <Typography sx={{ color: "text.secondary", fontSize: 11 }}>Labels</Typography>
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={settings.mapLabelsEnabled ? "on" : "off"}
+          onChange={(_, value: "off" | "on" | null) => {
+            if (value) {
+              update("mapLabelsEnabled", value === "on");
+            }
+          }}
+          aria-label="Map labels"
+          sx={{ "& .MuiToggleButton-root": { px: 0.75, py: 0.2, fontSize: 10 } }}
+        >
+          <ToggleButton value="off">OFF</ToggleButton>
+          <ToggleButton value="on">ON</ToggleButton>
+        </ToggleButtonGroup>
+      </Stack>
     </Section>
   );
 }

@@ -1,6 +1,7 @@
 import type { AnnotationColorMode, AppearanceMode, AppearanceSettings, DrawingLayer, MapSettings, PaintMode, PanelPosition } from "../types/map";
 import {
   DEFAULT_DRAWING_LAYER,
+  DEFAULT_MAP_LABELS_ENABLED,
   DEFAULT_PAINT_COLOR_MODE,
   DEFAULT_PAINT_MODE,
   DEFAULT_SHOW_DRAWINGS,
@@ -105,6 +106,7 @@ export function normalizeSettings(settings: MapSettings): MapSettings {
     appearanceByMode,
     // High/Ultra disabled: stitching repeats Google attribution and costs extra requests.
     resolutionMode: DEFAULT_SETTINGS.resolutionMode,
+    mapLabelsEnabled: typeof settings.mapLabelsEnabled === "boolean" ? settings.mapLabelsEnabled : DEFAULT_MAP_LABELS_ENABLED,
     zoom: clamp(Math.round(settings.zoom), MIN_ZOOM, MAX_ZOOM),
     scale: clamp(Math.round(settings.scale), MIN_SCALE, MAX_SCALE),
     paintMode: isPaintMode(settings.paintMode) ? settings.paintMode : DEFAULT_PAINT_MODE,
