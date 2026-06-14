@@ -2,6 +2,8 @@ import type { ExportSize, MapRenderMetrics, MapSettings, MapSource, Orientation,
 import { DEFAULT_APPEARANCE_BY_MODE } from "./appearancePresets";
 import {
   DEFAULT_APPEARANCE_MODE,
+  DEFAULT_DEMO_OFFSET_X,
+  DEFAULT_DEMO_OFFSET_Y,
   DEFAULT_LARGE_GRID_COLOR,
   DEFAULT_LARGE_GRID_FEET,
   DEFAULT_LARGE_GRID_LINE_WIDTH,
@@ -48,6 +50,8 @@ export const DEFAULT_SETTINGS: MapSettings = {
   longitude: DEFAULT_LONGITUDE,
   zoom: DEFAULT_ZOOM,
   mapLabelsEnabled: DEFAULT_MAP_LABELS_ENABLED,
+  demoOffsetX: DEFAULT_DEMO_OFFSET_X,
+  demoOffsetY: DEFAULT_DEMO_OFFSET_Y,
   rotation: DEFAULT_ROTATION,
   scale: DEFAULT_SCALE,
   isZoomScaleLocked: DEFAULT_ZOOM_SCALE_LOCKED,

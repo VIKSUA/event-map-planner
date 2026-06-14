@@ -68,6 +68,18 @@ function drawMapLayer(
   context.restore();
 }
 
+function combineMapOffsets(baseOffset: { x: number; y: number } | undefined, settings: MapSettings): { x: number; y: number } {
+  const liveOffset = baseOffset ?? { x: 0, y: 0 };
+  if (settings.apiKey.trim()) {
+    return liveOffset;
+  }
+
+  return {
+    x: settings.demoOffsetX + liveOffset.x,
+    y: settings.demoOffsetY + liveOffset.y,
+  };
+}
+
 function drawGrid(
   context: CanvasRenderingContext2D,
   width: number,
@@ -155,7 +167,7 @@ export function drawComposition(
   }
 
   fillCanvasBackground(context, width, height);
-  drawMapLayer(context, width, height, settings, source, options.mapOffset);
+  drawMapLayer(context, width, height, settings, source, combineMapOffsets(options.mapOffset, settings));
 
   const annotationFilter = getSampledAnnotationFilter(settings);
   const annotationOpacity = getMapOpacity(settings);
@@ -180,7 +192,7 @@ export function renderMapOnlyCanvas(settings: MapSettings, source: MapSource, si
   }
 
   fillCanvasBackground(context, size.width, size.height);
-  drawMapLayer(context, size.width, size.height, settings, source, undefined, options.applyAppearance ?? true, options.applyOpacity ?? true);
+  drawMapLayer(context, size.width, size.height, settings, source, combineMapOffsets(undefined, settings), options.applyAppearance ?? true, options.applyOpacity ?? true);
   return canvas;
 }
 

@@ -94,6 +94,8 @@ export interface MapSettings {
   longitude: number;
   zoom: number;
   mapLabelsEnabled: boolean;
+  demoOffsetX: number;
+  demoOffsetY: number;
   rotation: number;
   scale: number;
   isZoomScaleLocked: boolean;

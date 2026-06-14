@@ -2,10 +2,13 @@ export const DEFAULT_LATITUDE = 43.6554642;
 export const DEFAULT_LONGITUDE = -79.5870194;
 export const DEFAULT_ZOOM = 16;
 export const DEFAULT_MAP_LABELS_ENABLED = false;
+export const DEFAULT_DEMO_OFFSET_X = 0;
+export const DEFAULT_DEMO_OFFSET_Y = 0;
 export const DEFAULT_ROTATION = 44;
 export const DEFAULT_SCALE = 165;
 export const DEFAULT_ZOOM_SCALE_LOCKED = false;
 export const DEFAULT_MOVE_STEP_METERS = 1;
+export const DEFAULT_DEMO_MOVE_STEP_PX = 80;
 
 export const MIN_ZOOM = 0;
 export const MAX_ZOOM = 22;

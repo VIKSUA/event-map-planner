@@ -1,5 +1,7 @@
 import type { AnnotationColorMode, AppearanceMode, AppearanceSettings, DrawingLayer, MapSettings, PaintMode, PanelPosition } from "../types/map";
 import {
+  DEFAULT_DEMO_OFFSET_X,
+  DEFAULT_DEMO_OFFSET_Y,
   DEFAULT_DRAWING_LAYER,
   DEFAULT_GRID_ROTATION,
   DEFAULT_MAP_LABELS_ENABLED,
@@ -111,6 +113,8 @@ export function normalizeSettings(settings: MapSettings): MapSettings {
     // High/Ultra disabled: stitching repeats Google attribution and costs extra requests.
     resolutionMode: DEFAULT_SETTINGS.resolutionMode,
     mapLabelsEnabled: typeof settings.mapLabelsEnabled === "boolean" ? settings.mapLabelsEnabled : DEFAULT_MAP_LABELS_ENABLED,
+    demoOffsetX: typeof settings.demoOffsetX === "number" && Number.isFinite(settings.demoOffsetX) ? settings.demoOffsetX : DEFAULT_DEMO_OFFSET_X,
+    demoOffsetY: typeof settings.demoOffsetY === "number" && Number.isFinite(settings.demoOffsetY) ? settings.demoOffsetY : DEFAULT_DEMO_OFFSET_Y,
     zoom: clamp(Math.round(settings.zoom), MIN_ZOOM, MAX_ZOOM),
     scale: clamp(Math.round(settings.scale), MIN_SCALE, MAX_SCALE),
     paintMode: isPaintMode(settings.paintMode) ? settings.paintMode : DEFAULT_PAINT_MODE,

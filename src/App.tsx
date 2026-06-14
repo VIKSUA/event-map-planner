@@ -50,6 +50,16 @@ export default function App() {
   }, [settings]);
 
   useEffect(() => {
+    if (!settings.apiKey.trim() || (settings.demoOffsetX === 0 && settings.demoOffsetY === 0)) {
+      return;
+    }
+
+    setSettings((currentSettings) =>
+      currentSettings.apiKey.trim() ? { ...currentSettings, demoOffsetX: DEFAULT_SETTINGS.demoOffsetX, demoOffsetY: DEFAULT_SETTINGS.demoOffsetY } : currentSettings,
+    );
+  }, [settings.apiKey, settings.demoOffsetX, settings.demoOffsetY]);
+
+  useEffect(() => {
     let cancelled = false;
 
     if (!settings.apiKey.trim()) {

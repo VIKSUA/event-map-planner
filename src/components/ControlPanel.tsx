@@ -20,6 +20,7 @@ import {
   DEFAULT_GRID_OFFSET_X,
   DEFAULT_GRID_OFFSET_Y,
   DEFAULT_GRID_ROTATION,
+  DEFAULT_DEMO_MOVE_STEP_PX,
   DEFAULT_LARGE_GRID_FEET,
   DEFAULT_LARGE_GRID_METERS,
   DEFAULT_LATITUDE,
@@ -129,6 +130,22 @@ export function ControlPanel({
   const canScaleIn = !zoomScaleLocked && scale < MAX_SCALE;
 
   const nudge = (direction: "left" | "right" | "up" | "down") => {
+    if (!settings.apiKey.trim()) {
+      const delta = {
+        left: { x: -DEFAULT_DEMO_MOVE_STEP_PX, y: 0 },
+        right: { x: DEFAULT_DEMO_MOVE_STEP_PX, y: 0 },
+        up: { x: 0, y: -DEFAULT_DEMO_MOVE_STEP_PX },
+        down: { x: 0, y: DEFAULT_DEMO_MOVE_STEP_PX },
+      }[direction];
+      onChange({
+        ...settings,
+        demoOffsetX: settings.demoOffsetX + delta.x,
+        demoOffsetY: settings.demoOffsetY + delta.y,
+      });
+      setMessage({ text: "Demo image moved locally. Add API key for live map updates.", severity: "success" });
+      return;
+    }
+
     const next = moveByMeters(settings.latitude, settings.longitude, direction, DEFAULT_MOVE_STEP_METERS, settings.rotation);
     onChange({
       ...settings,

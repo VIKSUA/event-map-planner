@@ -25,10 +25,12 @@ interface UseMapDragPanProps {
   previewScale: number;
   loadError: string | null;
   canDragPan: boolean;
+  useLocalPan: boolean;
+  onLocalPanEnd: (offsetX: number, offsetY: number) => void;
   onPanEnd: (latitude: number, longitude: number) => void;
 }
 
-export function useMapDragPan({ settings, source, exportSize, previewScale, loadError, canDragPan, onPanEnd }: UseMapDragPanProps) {
+export function useMapDragPan({ settings, source, exportSize, previewScale, loadError, canDragPan, useLocalPan, onLocalPanEnd, onPanEnd }: UseMapDragPanProps) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isPanLocked, setIsPanLocked] = useState(false);
@@ -131,6 +133,13 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, load
         return;
       }
 
+      if (useLocalPan) {
+        setDragOffset({ x: 0, y: 0 });
+        pendingCommitRef.current = null;
+        onLocalPanEnd(delta.x, delta.y);
+        return;
+      }
+
       setDragOffset(delta);
       if (source) {
         pendingCommitRef.current = { source };
@@ -146,7 +155,7 @@ export function useMapDragPan({ settings, source, exportSize, previewScale, load
       );
       onPanEnd(Number(next.latitude.toFixed(7)), Number(next.longitude.toFixed(7)));
     },
-    [getExportDelta, onPanEnd, source],
+    [getExportDelta, onLocalPanEnd, onPanEnd, source, useLocalPan],
   );
 
   const handlePointerUp = useCallback((event: ReactPointerEvent<HTMLElement>) => finishDrag(event, true), [finishDrag]);
