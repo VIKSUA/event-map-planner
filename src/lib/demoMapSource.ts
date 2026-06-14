@@ -12,8 +12,7 @@ function loadDemoImage(): Promise<HTMLImageElement> {
     const image = new Image();
     image.decoding = "async";
     image.onload = () => resolve(image);
-    image.onerror = () =>
-      reject(new Error("Built-in demo map image is missing. Add a real satellite image at public/demo/default-map-preview.png or enter a Google API key."));
+    image.onerror = () => reject(new Error("Demo image asset is missing. Add public/demo/default-map-preview.png or enter a Google API key."));
     image.src = DEMO_MAP_URL;
   });
 }
