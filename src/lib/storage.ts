@@ -17,7 +17,7 @@ import {
   MIN_ZOOM,
 } from "./mapConstants";
 import { DEFAULT_APPEARANCE_BY_MODE, applyActiveAppearance } from "./appearancePresets";
-import { migratePaintStrokes } from "./annotations";
+import { migratePaintStrokes, normalizeAnnotationLayer } from "./annotations";
 import { DEFAULT_SETTINGS } from "./mapMath";
 
 const SETTINGS_KEY = "map-background-exporter.settings";
@@ -109,7 +109,7 @@ export function normalizeSettings(settings: MapSettings): MapSettings {
     drawingLayer: isDrawingLayer(settings.drawingLayer) ? settings.drawingLayer : DEFAULT_DRAWING_LAYER,
     annotations:
       Array.isArray(settings.annotations) && settings.annotations.length > 0
-        ? settings.annotations
+        ? settings.annotations.map(normalizeAnnotationLayer)
         : migratePaintStrokes(Array.isArray(settings.paintStrokes) ? settings.paintStrokes : []),
     paintStrokes: Array.isArray(settings.paintStrokes) ? settings.paintStrokes : [],
     smallGridLineWidth: clamp(Math.round(settings.smallGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),

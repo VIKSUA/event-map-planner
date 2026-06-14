@@ -111,6 +111,8 @@ export function drawComposition(
   const { width, height } = size;
   const { mapDrawSize } = getMapDrawSize(size, settings);
   const annotations = settings.showDrawings ? [...settings.annotations, ...(options.additionalAnnotations ?? [])] : [];
+  const belowGridAnnotations = annotations.filter((annotation) => annotation.layer === "belowGrid");
+  const aboveGridAnnotations = annotations.filter((annotation) => annotation.layer === "aboveGrid");
 
   if (source.width < mapDrawSize || source.height < mapDrawSize) {
     warnings.push("Standard source image may be too low-resolution for this export size.");
@@ -119,17 +121,13 @@ export function drawComposition(
   fillCanvasBackground(context, width, height);
   drawMapLayer(context, width, height, settings, source, options.mapOffset);
 
-  if (settings.drawingLayer === "belowGrid") {
-    drawAnnotations(context, annotations);
-  }
+  drawAnnotations(context, belowGridAnnotations);
 
   if (settings.showGrid) {
     drawGrid(context, width, height, settings, source);
   }
 
-  if (settings.drawingLayer === "aboveGrid") {
-    drawAnnotations(context, annotations);
-  }
+  drawAnnotations(context, aboveGridAnnotations);
 
   return [...new Set(warnings)];
 }

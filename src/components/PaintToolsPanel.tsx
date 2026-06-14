@@ -21,7 +21,10 @@ function clamp(value: number, min: number, max: number): number {
 
 export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings; onChange: (settings: MapSettings) => void }) {
   const update = <K extends keyof MapSettings>(key: K, value: MapSettings[K]) => onChange({ ...settings, [key]: value });
-  const setMode = (paintMode: PaintMode) => update("paintMode", paintMode);
+  const setMode = (paintMode: PaintMode) => {
+    const recommendedLayer = paintMode === "text" ? "aboveGrid" : paintMode === "brush" || paintMode === "line" || paintMode === "rect" ? "belowGrid" : settings.drawingLayer;
+    onChange({ ...settings, drawingLayer: recommendedLayer, paintMode });
+  };
   const undo = () => update("annotations", settings.annotations.slice(0, -1));
   const clear = () => {
     if (settings.annotations.length > 0 && window.confirm("Clear all drawings?")) {
@@ -83,7 +86,9 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
           ))}
         </ToggleButtonGroup>
         <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Layer</Typography>
+          <Tooltip title="Layer applies to new drawings only.">
+            <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Layer</Typography>
+          </Tooltip>
           <ToggleButtonGroup
             exclusive
             size="small"
@@ -97,13 +102,13 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
             sx={{ "& .MuiToggleButton-root": { px: 1, py: 0.25, fontSize: 11 } }}
           >
             <ToggleButton value="belowGrid">
-              <Tooltip title="Choose whether drawings are rendered below or above the grid.">
-                <span>Below</span>
+              <Tooltip title="Layer applies to new drawings only.">
+                <span>Below grid</span>
               </Tooltip>
             </ToggleButton>
             <ToggleButton value="aboveGrid">
-              <Tooltip title="Choose whether drawings are rendered below or above the grid.">
-                <span>Above</span>
+              <Tooltip title="Layer applies to new drawings only.">
+                <span>Above grid</span>
               </Tooltip>
             </ToggleButton>
           </ToggleButtonGroup>

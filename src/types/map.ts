@@ -4,7 +4,8 @@ export type Orientation = "portrait" | "landscape";
 export type ResolutionMode = "standard" | "high" | "ultra";
 export type AppearanceMode = "screen" | "printBw";
 export type PaintMode = "pan" | "pick" | "brush" | "line" | "rect" | "text";
-export type DrawingLayer = "belowGrid" | "aboveGrid";
+export type AnnotationLayer = "belowGrid" | "aboveGrid";
+export type DrawingLayer = AnnotationLayer;
 
 export interface PaintPoint {
   x: number;
@@ -22,6 +23,7 @@ export interface BrushAnnotation {
   id: string;
   type: "brush";
   color: string;
+  layer: AnnotationLayer;
   size: number;
   points: PaintPoint[];
 }
@@ -30,6 +32,7 @@ export interface LineAnnotation {
   id: string;
   type: "line";
   color: string;
+  layer: AnnotationLayer;
   width: number;
   start: PaintPoint;
   end: PaintPoint;
@@ -39,6 +42,7 @@ export interface RectAnnotation {
   id: string;
   type: "rect";
   color: string;
+  layer: AnnotationLayer;
   width: number;
   x: number;
   y: number;
@@ -50,6 +54,7 @@ export interface TextAnnotation {
   id: string;
   type: "text";
   color: string;
+  layer: AnnotationLayer;
   fontSize: number;
   x: number;
   y: number;

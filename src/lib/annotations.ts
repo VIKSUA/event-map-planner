@@ -1,31 +1,45 @@
-import type { Annotation, BrushAnnotation, LineAnnotation, PaintPoint, PaintStroke, RectAnnotation, TextAnnotation } from "../types/map";
+import type { Annotation, AnnotationLayer, BrushAnnotation, LineAnnotation, PaintPoint, PaintStroke, RectAnnotation, TextAnnotation } from "../types/map";
 
 function createId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export function createBrushAnnotation(color: string, size: number, point: PaintPoint): BrushAnnotation {
+export function defaultLayerForAnnotation(annotation: Annotation): AnnotationLayer {
+  return annotation.type === "text" ? "aboveGrid" : "belowGrid";
+}
+
+export function normalizeAnnotationLayer(annotation: Annotation): Annotation {
+  const layer = (annotation as { layer?: unknown }).layer;
+  return {
+    ...annotation,
+    layer: layer === "belowGrid" || layer === "aboveGrid" ? layer : defaultLayerForAnnotation(annotation),
+  } as Annotation;
+}
+
+export function createBrushAnnotation(color: string, layer: AnnotationLayer, size: number, point: PaintPoint): BrushAnnotation {
   return {
     id: createId(),
     type: "brush",
     color,
+    layer,
     size,
     points: [point],
   };
 }
 
-export function createLineAnnotation(color: string, width: number, start: PaintPoint, end: PaintPoint): LineAnnotation {
+export function createLineAnnotation(color: string, layer: AnnotationLayer, width: number, start: PaintPoint, end: PaintPoint): LineAnnotation {
   return {
     id: createId(),
     type: "line",
     color,
+    layer,
     width,
     start,
     end,
   };
 }
 
-export function createRectAnnotation(color: string, width: number, start: PaintPoint, end: PaintPoint): RectAnnotation {
+export function createRectAnnotation(color: string, layer: AnnotationLayer, width: number, start: PaintPoint, end: PaintPoint): RectAnnotation {
   const x = Math.min(start.x, end.x);
   const y = Math.min(start.y, end.y);
 
@@ -33,6 +47,7 @@ export function createRectAnnotation(color: string, width: number, start: PaintP
     id: createId(),
     type: "rect",
     color,
+    layer,
     width,
     x,
     y,
@@ -41,11 +56,12 @@ export function createRectAnnotation(color: string, width: number, start: PaintP
   };
 }
 
-export function createTextAnnotation(color: string, fontSize: number, point: PaintPoint, text: string): TextAnnotation {
+export function createTextAnnotation(color: string, layer: AnnotationLayer, fontSize: number, point: PaintPoint, text: string): TextAnnotation {
   return {
     id: createId(),
     type: "text",
     color,
+    layer,
     fontSize,
     x: point.x,
     y: point.y,
@@ -58,6 +74,7 @@ export function migratePaintStrokes(strokes: PaintStroke[]): BrushAnnotation[] {
     id: stroke.id,
     type: "brush",
     color: stroke.color,
+    layer: "belowGrid",
     size: stroke.radius * 2,
     points: stroke.points,
   }));

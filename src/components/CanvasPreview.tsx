@@ -121,7 +121,7 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
         const imageData = context?.getImageData(0, 0, mapCanvas.width, mapCanvas.height);
         const color = imageData ? sampleAverageColor(imageData, point.x, point.y, settings.paintSampleSize) : null;
         if (color) {
-          onChange({ ...settings, paintColor: color, paintMode: "brush" });
+          onChange({ ...settings, drawingLayer: "belowGrid", paintColor: color, paintMode: "brush" });
         }
       } catch {
         // Keep the previous color if sampling fails.
@@ -132,7 +132,7 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
     if (settings.paintMode === "text") {
       const text = window.prompt("Text");
       if (text?.trim()) {
-        onChange({ ...settings, annotations: [...settings.annotations, createTextAnnotation(settings.paintColor, settings.paintBrushRadius, point, text.trim())] });
+        onChange({ ...settings, annotations: [...settings.annotations, createTextAnnotation(settings.paintColor, settings.drawingLayer, settings.paintBrushRadius, point, text.trim())] });
       }
       return;
     }
@@ -144,10 +144,10 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
     event.currentTarget.setPointerCapture(event.pointerId);
     const annotation =
       settings.paintMode === "brush"
-        ? createBrushAnnotation(settings.paintColor, settings.paintBrushRadius, point)
+        ? createBrushAnnotation(settings.paintColor, settings.drawingLayer, settings.paintBrushRadius, point)
         : settings.paintMode === "line"
-          ? createLineAnnotation(settings.paintColor, settings.paintBrushRadius, point, point)
-          : createRectAnnotation(settings.paintColor, settings.paintBrushRadius, point, point);
+          ? createLineAnnotation(settings.paintColor, settings.drawingLayer, settings.paintBrushRadius, point, point)
+          : createRectAnnotation(settings.paintColor, settings.drawingLayer, settings.paintBrushRadius, point, point);
     currentAnnotationRef.current = annotation;
     annotationStartRef.current = point;
     setCurrentAnnotation(annotation);
@@ -171,7 +171,7 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
     } else if (annotation.type === "line") {
       nextAnnotation = { ...annotation, end: point };
     } else if (annotation.type === "rect") {
-      nextAnnotation = createRectAnnotation(annotation.color, annotation.width, annotationStartRef.current ?? { x: annotation.x, y: annotation.y }, point);
+      nextAnnotation = createRectAnnotation(annotation.color, annotation.layer, annotation.width, annotationStartRef.current ?? { x: annotation.x, y: annotation.y }, point);
     }
 
     if (nextAnnotation) {
