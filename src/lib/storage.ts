@@ -1,5 +1,8 @@
-import type { AppearanceMode, AppearanceSettings, MapSettings, PanelPosition } from "../types/map";
+import type { AppearanceMode, AppearanceSettings, DrawingLayer, MapSettings, PaintMode, PanelPosition } from "../types/map";
 import {
+  DEFAULT_DRAWING_LAYER,
+  DEFAULT_PAINT_MODE,
+  DEFAULT_SHOW_DRAWINGS,
   MAX_GRID_LINE_WIDTH,
   MAX_MAP_FILTER_PERCENT,
   MAX_PAINT_BRUSH_RADIUS,
@@ -14,6 +17,7 @@ import {
   MIN_ZOOM,
 } from "./mapConstants";
 import { DEFAULT_APPEARANCE_BY_MODE, applyActiveAppearance } from "./appearancePresets";
+import { migratePaintStrokes } from "./annotations";
 import { DEFAULT_SETTINGS } from "./mapMath";
 
 const SETTINGS_KEY = "map-background-exporter.settings";
@@ -25,6 +29,14 @@ function clamp(value: number, min: number, max: number): number {
 
 function isAppearanceMode(value: unknown): value is AppearanceMode {
   return value === "screen" || value === "printBw";
+}
+
+function isPaintMode(value: unknown): value is PaintMode {
+  return value === "pan" || value === "pick" || value === "brush" || value === "line" || value === "rect" || value === "text";
+}
+
+function isDrawingLayer(value: unknown): value is DrawingLayer {
+  return value === "belowGrid" || value === "aboveGrid";
 }
 
 function normalizeAppearance(appearance: AppearanceSettings): AppearanceSettings {
@@ -40,7 +52,7 @@ function normalizeAppearance(appearance: AppearanceSettings): AppearanceSettings
 }
 
 export function normalizeSettings(settings: MapSettings): MapSettings {
-  const legacySettings = settings as MapSettings & { appearanceMode?: unknown };
+  const legacySettings = settings as MapSettings & { appearanceMode?: unknown; paintMode?: unknown };
   const activeAppearanceMode = isAppearanceMode(settings.activeAppearanceMode)
     ? settings.activeAppearanceMode
     : isAppearanceMode(legacySettings.appearanceMode)
@@ -90,8 +102,15 @@ export function normalizeSettings(settings: MapSettings): MapSettings {
     resolutionMode: DEFAULT_SETTINGS.resolutionMode,
     zoom: clamp(Math.round(settings.zoom), MIN_ZOOM, MAX_ZOOM),
     scale: clamp(Math.round(settings.scale), MIN_SCALE, MAX_SCALE),
+    paintMode: isPaintMode(settings.paintMode) ? settings.paintMode : DEFAULT_PAINT_MODE,
     paintBrushRadius: clamp(Math.round(settings.paintBrushRadius), MIN_PAINT_BRUSH_RADIUS, MAX_PAINT_BRUSH_RADIUS),
     paintSampleSize: clamp(Math.round(settings.paintSampleSize), MIN_PAINT_SAMPLE_SIZE, MAX_PAINT_SAMPLE_SIZE),
+    showDrawings: typeof settings.showDrawings === "boolean" ? settings.showDrawings : DEFAULT_SHOW_DRAWINGS,
+    drawingLayer: isDrawingLayer(settings.drawingLayer) ? settings.drawingLayer : DEFAULT_DRAWING_LAYER,
+    annotations:
+      Array.isArray(settings.annotations) && settings.annotations.length > 0
+        ? settings.annotations
+        : migratePaintStrokes(Array.isArray(settings.paintStrokes) ? settings.paintStrokes : []),
     paintStrokes: Array.isArray(settings.paintStrokes) ? settings.paintStrokes : [],
     smallGridLineWidth: clamp(Math.round(settings.smallGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),
     largeGridLineWidth: clamp(Math.round(settings.largeGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),

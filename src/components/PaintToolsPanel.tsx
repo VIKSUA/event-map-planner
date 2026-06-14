@@ -1,8 +1,13 @@
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import BrushIcon from "@mui/icons-material/Brush";
+import ColorizeIcon from "@mui/icons-material/Colorize";
+import CropSquareIcon from "@mui/icons-material/CropSquare";
+import PanToolIcon from "@mui/icons-material/PanTool";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
+import TextFieldsIcon from "@mui/icons-material/TextFields";
 import UndoIcon from "@mui/icons-material/Undo";
-import { Box, Button, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
-import type { MapSettings, PaintMode } from "../types/map";
+import { Box, Button, Checkbox, FormControlLabel, InputAdornment, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
+import type { DrawingLayer, MapSettings, PaintMode } from "../types/map";
 import { MAX_PAINT_BRUSH_RADIUS, MAX_PAINT_SAMPLE_SIZE, MIN_PAINT_BRUSH_RADIUS, MIN_PAINT_SAMPLE_SIZE } from "../lib/mapConstants";
 
 function numericValue(value: string, fallback: number): number {
@@ -17,8 +22,20 @@ function clamp(value: number, min: number, max: number): number {
 export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings; onChange: (settings: MapSettings) => void }) {
   const update = <K extends keyof MapSettings>(key: K, value: MapSettings[K]) => onChange({ ...settings, [key]: value });
   const setMode = (paintMode: PaintMode) => update("paintMode", paintMode);
-  const undo = () => update("paintStrokes", settings.paintStrokes.slice(0, -1));
-  const clear = () => update("paintStrokes", []);
+  const undo = () => update("annotations", settings.annotations.slice(0, -1));
+  const clear = () => {
+    if (settings.annotations.length > 0 && window.confirm("Clear all drawings?")) {
+      update("annotations", []);
+    }
+  };
+  const tools: { mode: PaintMode; title: string; icon: typeof PanToolIcon }[] = [
+    { mode: "pan", title: "Pan", icon: PanToolIcon },
+    { mode: "pick", title: "Pick color", icon: ColorizeIcon },
+    { mode: "brush", title: "Brush", icon: BrushIcon },
+    { mode: "line", title: "Line", icon: ShowChartIcon },
+    { mode: "rect", title: "Rectangle", icon: CropSquareIcon },
+    { mode: "text", title: "Text", icon: TextFieldsIcon },
+  ];
 
   return (
     <Box
@@ -39,6 +56,11 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
             Paint tools
           </Typography>
         </Stack>
+        <FormControlLabel
+          sx={{ m: 0 }}
+          control={<Checkbox size="small" checked={settings.showDrawings} onChange={(event) => update("showDrawings", event.target.checked)} />}
+          label="Show drawings"
+        />
         <ToggleButtonGroup
           exclusive
           size="small"
@@ -49,14 +71,43 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
             }
           }}
           fullWidth
-          sx={{ "& .MuiToggleButton-root": { py: 0.35, fontSize: 11 } }}
+          aria-label="Annotation tool"
+          sx={{ "& .MuiToggleButton-root": { px: 0.75, py: 0.35 } }}
         >
-          {(["off", "pick", "brush"] as PaintMode[]).map((mode) => (
-            <ToggleButton key={mode} value={mode}>
-              {mode === "off" ? "Off" : mode === "pick" ? "Pick" : "Brush"}
+          {tools.map(({ icon: Icon, mode, title }) => (
+            <ToggleButton key={mode} value={mode} aria-label={title}>
+              <Tooltip title={title}>
+                <Icon fontSize="small" />
+              </Tooltip>
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
+        <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Layer</Typography>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={settings.drawingLayer}
+            onChange={(_, value: DrawingLayer | null) => {
+              if (value) {
+                update("drawingLayer", value);
+              }
+            }}
+            aria-label="Drawing layer order"
+            sx={{ "& .MuiToggleButton-root": { px: 1, py: 0.25, fontSize: 11 } }}
+          >
+            <ToggleButton value="belowGrid">
+              <Tooltip title="Choose whether drawings are rendered below or above the grid.">
+                <span>Below</span>
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="aboveGrid">
+              <Tooltip title="Choose whether drawings are rendered below or above the grid.">
+                <span>Above</span>
+              </Tooltip>
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
         <TextField
           label="Color"
           type="color"
@@ -67,7 +118,7 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
           slotProps={{ inputLabel: { shrink: true }, htmlInput: { style: { height: 32, padding: 4 } } }}
         />
         <TextField
-          label="Brush radius"
+          label="Size"
           type="number"
           size="small"
           value={settings.paintBrushRadius}
@@ -75,10 +126,13 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
             update("paintBrushRadius", clamp(Math.round(numericValue(event.target.value, settings.paintBrushRadius)), MIN_PAINT_BRUSH_RADIUS, MAX_PAINT_BRUSH_RADIUS))
           }
           fullWidth
-          slotProps={{ htmlInput: { min: MIN_PAINT_BRUSH_RADIUS, max: MAX_PAINT_BRUSH_RADIUS, step: 1 } }}
+          slotProps={{
+            htmlInput: { min: MIN_PAINT_BRUSH_RADIUS, max: MAX_PAINT_BRUSH_RADIUS, step: 1 },
+            input: { endAdornment: <InputAdornment position="end">px</InputAdornment> },
+          }}
         />
         <TextField
-          label="Pick sample"
+          label="Sample"
           type="number"
           size="small"
           value={settings.paintSampleSize}
@@ -86,13 +140,16 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
             update("paintSampleSize", clamp(Math.round(numericValue(event.target.value, settings.paintSampleSize)), MIN_PAINT_SAMPLE_SIZE, MAX_PAINT_SAMPLE_SIZE))
           }
           fullWidth
-          slotProps={{ htmlInput: { min: MIN_PAINT_SAMPLE_SIZE, max: MAX_PAINT_SAMPLE_SIZE, step: 1 } }}
+          slotProps={{
+            htmlInput: { min: MIN_PAINT_SAMPLE_SIZE, max: MAX_PAINT_SAMPLE_SIZE, step: 1 },
+            input: { endAdornment: <InputAdornment position="end">px</InputAdornment> },
+          }}
         />
         <Stack direction="row" spacing={0.75}>
-          <Button size="small" variant="outlined" startIcon={<UndoIcon />} onClick={undo} disabled={settings.paintStrokes.length === 0}>
+          <Button size="small" variant="outlined" startIcon={<UndoIcon />} onClick={undo} disabled={settings.annotations.length === 0}>
             Undo
           </Button>
-          <Button size="small" variant="outlined" color="error" startIcon={<DeleteSweepIcon />} onClick={clear} disabled={settings.paintStrokes.length === 0}>
+          <Button size="small" variant="outlined" color="error" startIcon={<DeleteSweepIcon />} onClick={clear} disabled={settings.annotations.length === 0}>
             Clear
           </Button>
         </Stack>

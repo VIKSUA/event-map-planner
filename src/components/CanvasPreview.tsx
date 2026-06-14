@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import BrushIcon from "@mui/icons-material/Brush";
 import { Box } from "@mui/material";
-import type { ExportSize, MapSettings, MapSource, PaintPoint, PaintStroke } from "../types/map";
+import type { Annotation, BrushAnnotation, ExportSize, MapSettings, MapSource, PaintPoint } from "../types/map";
+import { createBrushAnnotation, createLineAnnotation, createRectAnnotation, createTextAnnotation, shouldAddBrushPoint } from "../lib/annotations";
 import { drawComposition, renderMapOnlyCanvas } from "../lib/drawCanvas";
 import { getExportSize, getGridMetrics } from "../lib/mapMath";
-import { createPaintStroke, sampleAverageColor, shouldAddPaintPoint } from "../lib/paint";
+import { sampleAverageColor } from "../lib/paint";
 import { OverlayPanelStack } from "./OverlayPanelStack";
 import { PaintToolsPanel } from "./PaintToolsPanel";
 import { SlideOutPanel } from "./SlideOutPanel";
@@ -40,13 +41,14 @@ function formatMetric(value: number): string {
 export function CanvasPreview({ settings, source, loading, error, warnings, onChange, onPanEnd }: CanvasPreviewProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const currentStrokeRef = useRef<PaintStroke | null>(null);
+  const currentAnnotationRef = useRef<Annotation | null>(null);
+  const annotationStartRef = useRef<PaintPoint | null>(null);
   const [previewSize, setPreviewSize] = useState<ExportSize>({ width: 800, height: 800 });
-  const [currentStroke, setCurrentStroke] = useState<PaintStroke | null>(null);
+  const [currentAnnotation, setCurrentAnnotation] = useState<Annotation | null>(null);
   const exportSize = getExportSize(settings);
   const previewScale = previewSize.width / exportSize.width;
   const gridMetrics = source ? getGridMetrics(settings, exportSize, source) : null;
-  const isPaintActive = settings.paintMode !== "off";
+  const isPaintActive = settings.paintMode !== "pan";
   const { dragOffset, isDragging, isPanLocked, isMapUpdatingAfterDrag, dragHandlers } = useMapDragPan({
     settings,
     source,
@@ -94,8 +96,8 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
     }
 
     context.setTransform(previewScale * dpr, 0, 0, previewScale * dpr, 0, 0);
-    drawComposition(context, exportSize, settings, source, { additionalPaintStrokes: currentStroke ? [currentStroke] : [], mapOffset: dragOffset });
-  }, [currentStroke, dragOffset, exportSize, previewScale, previewSize, settings, source]);
+    drawComposition(context, exportSize, settings, source, { additionalAnnotations: currentAnnotation ? [currentAnnotation] : [], mapOffset: dragOffset });
+  }, [currentAnnotation, dragOffset, exportSize, previewScale, previewSize, settings, source]);
 
   const getExportPoint = (event: ReactPointerEvent<HTMLElement>): PaintPoint => {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -127,36 +129,60 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
       return;
     }
 
-    if (settings.paintMode !== "brush") {
+    if (settings.paintMode === "text") {
+      const text = window.prompt("Text");
+      if (text?.trim()) {
+        onChange({ ...settings, annotations: [...settings.annotations, createTextAnnotation(settings.paintColor, settings.paintBrushRadius, point, text.trim())] });
+      }
+      return;
+    }
+
+    if (!["brush", "line", "rect"].includes(settings.paintMode)) {
       return;
     }
 
     event.currentTarget.setPointerCapture(event.pointerId);
-    const stroke = createPaintStroke(settings.paintColor, settings.paintBrushRadius, point);
-    currentStrokeRef.current = stroke;
-    setCurrentStroke(stroke);
+    const annotation =
+      settings.paintMode === "brush"
+        ? createBrushAnnotation(settings.paintColor, settings.paintBrushRadius, point)
+        : settings.paintMode === "line"
+          ? createLineAnnotation(settings.paintColor, settings.paintBrushRadius, point, point)
+          : createRectAnnotation(settings.paintColor, settings.paintBrushRadius, point, point);
+    currentAnnotationRef.current = annotation;
+    annotationStartRef.current = point;
+    setCurrentAnnotation(annotation);
   };
 
   const handlePaintPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-    const stroke = currentStrokeRef.current;
-    if (!stroke || settings.paintMode !== "brush") {
+    const annotation = currentAnnotationRef.current;
+    if (!annotation) {
       return;
     }
 
     event.preventDefault();
     const point = getExportPoint(event);
-    if (!shouldAddPaintPoint(stroke, point)) {
-      return;
+    let nextAnnotation: Annotation | null = null;
+
+    if (annotation.type === "brush") {
+      if (!shouldAddBrushPoint(annotation, point)) {
+        return;
+      }
+      nextAnnotation = { ...annotation, points: [...annotation.points, point] };
+    } else if (annotation.type === "line") {
+      nextAnnotation = { ...annotation, end: point };
+    } else if (annotation.type === "rect") {
+      nextAnnotation = createRectAnnotation(annotation.color, annotation.width, annotationStartRef.current ?? { x: annotation.x, y: annotation.y }, point);
     }
 
-    const nextStroke = { ...stroke, points: [...stroke.points, point] };
-    currentStrokeRef.current = nextStroke;
-    setCurrentStroke(nextStroke);
+    if (nextAnnotation) {
+      currentAnnotationRef.current = nextAnnotation;
+      setCurrentAnnotation(nextAnnotation);
+    }
   };
 
-  const finishPaintStroke = (event: ReactPointerEvent<HTMLElement>, commit: boolean) => {
-    const stroke = currentStrokeRef.current;
-    if (!stroke) {
+  const finishPaintAnnotation = (event: ReactPointerEvent<HTMLElement>, commit: boolean) => {
+    const annotation = currentAnnotationRef.current;
+    if (!annotation) {
       return;
     }
 
@@ -164,18 +190,19 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    currentStrokeRef.current = null;
-    setCurrentStroke(null);
-    if (commit && stroke.points.length > 0) {
-      onChange({ ...settings, paintStrokes: [...settings.paintStrokes, stroke] });
+    currentAnnotationRef.current = null;
+    annotationStartRef.current = null;
+    setCurrentAnnotation(null);
+    if (commit) {
+      onChange({ ...settings, annotations: [...settings.annotations, annotation] });
     }
   };
 
   const paintHandlers = {
     onPointerDown: handlePaintPointerDown,
     onPointerMove: handlePaintPointerMove,
-    onPointerUp: (event: ReactPointerEvent<HTMLElement>) => finishPaintStroke(event, true),
-    onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => finishPaintStroke(event, false),
+    onPointerUp: (event: ReactPointerEvent<HTMLElement>) => finishPaintAnnotation(event, true),
+    onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => finishPaintAnnotation(event, false),
   };
 
   return (

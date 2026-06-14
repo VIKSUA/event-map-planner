@@ -1,4 +1,5 @@
-import type { ExportSize, MapSettings, MapSource, PaintStroke } from "../types/map";
+import type { Annotation, ExportSize, MapSettings, MapSource } from "../types/map";
+import { drawAnnotations } from "./annotations";
 import { getExportSize, getGridMetrics, getMapDrawSize } from "./mapMath";
 
 export interface RenderResult {
@@ -7,7 +8,7 @@ export interface RenderResult {
 }
 
 export interface DrawCompositionOptions {
-  additionalPaintStrokes?: PaintStroke[];
+  additionalAnnotations?: Annotation[];
   mapOffset?: { x: number; y: number };
 }
 
@@ -51,19 +52,6 @@ function drawMapLayer(
   context.rotate((settings.rotation * Math.PI) / 180);
   context.drawImage(source.image, -mapDrawSize / 2, -mapDrawSize / 2, mapDrawSize, mapDrawSize);
   context.restore();
-}
-
-function drawPaintStrokes(context: CanvasRenderingContext2D, strokes: PaintStroke[]): void {
-  for (const stroke of strokes) {
-    context.save();
-    context.fillStyle = stroke.color;
-    for (const point of stroke.points) {
-      context.beginPath();
-      context.arc(point.x, point.y, stroke.radius, 0, Math.PI * 2);
-      context.fill();
-    }
-    context.restore();
-  }
 }
 
 function drawGrid(
@@ -122,7 +110,7 @@ export function drawComposition(
   const warnings = [...source.warnings];
   const { width, height } = size;
   const { mapDrawSize } = getMapDrawSize(size, settings);
-  const paintStrokes = [...settings.paintStrokes, ...(options.additionalPaintStrokes ?? [])];
+  const annotations = settings.showDrawings ? [...settings.annotations, ...(options.additionalAnnotations ?? [])] : [];
 
   if (source.width < mapDrawSize || source.height < mapDrawSize) {
     warnings.push("Standard source image may be too low-resolution for this export size.");
@@ -130,10 +118,17 @@ export function drawComposition(
 
   fillCanvasBackground(context, width, height);
   drawMapLayer(context, width, height, settings, source, options.mapOffset);
-  drawPaintStrokes(context, paintStrokes);
+
+  if (settings.drawingLayer === "belowGrid") {
+    drawAnnotations(context, annotations);
+  }
 
   if (settings.showGrid) {
     drawGrid(context, width, height, settings, source);
+  }
+
+  if (settings.drawingLayer === "aboveGrid") {
+    drawAnnotations(context, annotations);
   }
 
   return [...new Set(warnings)];

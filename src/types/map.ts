@@ -3,7 +3,8 @@ export type PageFormat = "square" | "letter" | "a4";
 export type Orientation = "portrait" | "landscape";
 export type ResolutionMode = "standard" | "high" | "ultra";
 export type AppearanceMode = "screen" | "printBw";
-export type PaintMode = "off" | "pick" | "brush";
+export type PaintMode = "pan" | "pick" | "brush" | "line" | "rect" | "text";
+export type DrawingLayer = "belowGrid" | "aboveGrid";
 
 export interface PaintPoint {
   x: number;
@@ -16,6 +17,46 @@ export interface PaintStroke {
   radius: number;
   points: PaintPoint[];
 }
+
+export interface BrushAnnotation {
+  id: string;
+  type: "brush";
+  color: string;
+  size: number;
+  points: PaintPoint[];
+}
+
+export interface LineAnnotation {
+  id: string;
+  type: "line";
+  color: string;
+  width: number;
+  start: PaintPoint;
+  end: PaintPoint;
+}
+
+export interface RectAnnotation {
+  id: string;
+  type: "rect";
+  color: string;
+  width: number;
+  x: number;
+  y: number;
+  widthPx: number;
+  heightPx: number;
+}
+
+export interface TextAnnotation {
+  id: string;
+  type: "text";
+  color: string;
+  fontSize: number;
+  x: number;
+  y: number;
+  text: string;
+}
+
+export type Annotation = BrushAnnotation | LineAnnotation | RectAnnotation | TextAnnotation;
 
 export interface AppearanceSettings {
   mapGrayscale: boolean;
@@ -64,6 +105,9 @@ export interface MapSettings {
   paintColor: string;
   paintBrushRadius: number;
   paintSampleSize: number;
+  showDrawings: boolean;
+  drawingLayer: DrawingLayer;
+  annotations: Annotation[];
   paintStrokes: PaintStroke[];
 }
 
