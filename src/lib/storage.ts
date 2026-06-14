@@ -1,10 +1,13 @@
 import type { AnnotationColorMode, AppearanceMode, AppearanceSettings, DrawingLayer, MapSettings, PaintMode, PanelPosition } from "../types/map";
 import {
   DEFAULT_DRAWING_LAYER,
+  DEFAULT_GRID_ROTATION,
   DEFAULT_MAP_LABELS_ENABLED,
   DEFAULT_PAINT_COLOR_MODE,
   DEFAULT_PAINT_MODE,
   DEFAULT_SHOW_DRAWINGS,
+  DEFAULT_SHOW_LARGE_GRID,
+  DEFAULT_SHOW_SMALL_GRID,
   MAX_GRID_LINE_WIDTH,
   MAX_MAP_FILTER_PERCENT,
   MAX_PAINT_BRUSH_RADIUS,
@@ -59,6 +62,7 @@ function normalizeAppearance(appearance: AppearanceSettings): AppearanceSettings
 
 export function normalizeSettings(settings: MapSettings): MapSettings {
   const legacySettings = settings as MapSettings & { appearanceMode?: unknown; paintMode?: unknown };
+  const legacyShowGrid = typeof settings.showGrid === "boolean" ? settings.showGrid : DEFAULT_SETTINGS.showGrid;
   const activeAppearanceMode = isAppearanceMode(settings.activeAppearanceMode)
     ? settings.activeAppearanceMode
     : isAppearanceMode(legacySettings.appearanceMode)
@@ -114,6 +118,9 @@ export function normalizeSettings(settings: MapSettings): MapSettings {
     paintBrushRadius: clamp(Math.round(settings.paintBrushRadius), MIN_PAINT_BRUSH_RADIUS, MAX_PAINT_BRUSH_RADIUS),
     paintSampleSize: clamp(Math.round(settings.paintSampleSize), MIN_PAINT_SAMPLE_SIZE, MAX_PAINT_SAMPLE_SIZE),
     showDrawings: typeof settings.showDrawings === "boolean" ? settings.showDrawings : DEFAULT_SHOW_DRAWINGS,
+    showSmallGrid: typeof settings.showSmallGrid === "boolean" ? settings.showSmallGrid : legacyShowGrid && DEFAULT_SHOW_SMALL_GRID,
+    showLargeGrid: typeof settings.showLargeGrid === "boolean" ? settings.showLargeGrid : legacyShowGrid && DEFAULT_SHOW_LARGE_GRID,
+    gridRotation: typeof settings.gridRotation === "number" && Number.isFinite(settings.gridRotation) ? Math.round(settings.gridRotation) : DEFAULT_GRID_ROTATION,
     drawingLayer: isDrawingLayer(settings.drawingLayer) ? settings.drawingLayer : DEFAULT_DRAWING_LAYER,
     annotations:
       Array.isArray(settings.annotations) && settings.annotations.length > 0

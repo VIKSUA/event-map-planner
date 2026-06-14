@@ -210,11 +210,19 @@ export function GridSection({ settings, update, numberValue, resetGrid }: Shared
           { value: "feet", label: "ft" },
         ]}
       />
-      <FormControlLabel
-        sx={{ m: 0, alignSelf: "center" }}
-        control={<Checkbox size="small" checked={settings.showGrid} onChange={(event) => update("showGrid", event.target.checked)} />}
-        label="Show"
-      />
+      <CompactNumberField label="Rotate" value={settings.gridRotation} min={-180} max={180} step={1} endAdornment="°" onChange={(value) => update("gridRotation", Math.round(numberValue(value, settings.gridRotation)))} />
+      <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+        <FormControlLabel
+          sx={{ m: 0 }}
+          control={<Checkbox size="small" checked={settings.showSmallGrid} onChange={(event) => update("showSmallGrid", event.target.checked)} />}
+          label="Small"
+        />
+        <FormControlLabel
+          sx={{ m: 0 }}
+          control={<Checkbox size="small" checked={settings.showLargeGrid} onChange={(event) => update("showLargeGrid", event.target.checked)} />}
+          label="Large"
+        />
+      </Stack>
       <CompactNumberField label="Small" value={smallValue} min={settings.unit === "meters" ? 0.1 : 1} step={settings.unit === "meters" ? 0.1 : 1} onChange={(value) => update(smallKey, numberValue(value, smallValue))} />
       <CompactNumberField label="Large" value={largeValue} min={settings.unit === "meters" ? 0.1 : 1} step={settings.unit === "meters" ? 0.1 : 1} onChange={(value) => update(largeKey, numberValue(value, largeValue))} />
       <CompactNumberField label="Offset X" value={settings.gridOffsetX} step={1} onChange={(value) => update("gridOffsetX", numberValue(value, settings.gridOffsetX))} />

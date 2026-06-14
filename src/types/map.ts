@@ -104,6 +104,9 @@ export interface MapSettings {
   largeGridFeet: number;
   gridOffsetX: number;
   gridOffsetY: number;
+  gridRotation: number;
+  showSmallGrid: boolean;
+  showLargeGrid: boolean;
   smallGridColor: string;
   largeGridColor: string;
   smallGridLineWidth: number;

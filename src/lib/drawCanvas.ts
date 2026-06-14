@@ -12,7 +12,11 @@ export interface DrawCompositionOptions {
   mapOffset?: { x: number; y: number };
 }
 
-function snapCoordinate(value: number, lineWidth: number): number {
+function snapCoordinate(value: number, lineWidth: number, shouldSnap: boolean): number {
+  if (!shouldSnap) {
+    return value;
+  }
+
   return lineWidth === 1 ? Math.round(value) + 0.5 : Math.round(value);
 }
 
@@ -73,41 +77,63 @@ function drawGrid(
 ): void {
   const { smallGridStepPx: smallStep, largeGridStepPx: largeStep } = getGridMetrics(settings, { width, height }, source);
 
-  if (smallStep < 2 || largeStep < 2) {
+  if ((!settings.showSmallGrid && !settings.showLargeGrid) || (smallStep < 2 && largeStep < 2)) {
     return;
   }
 
+  const rotationRadians = (settings.gridRotation * Math.PI) / 180;
+  const isRotated = Math.abs(settings.gridRotation % 360) > 0.001;
+  const overscan = isRotated ? Math.ceil(Math.hypot(width, height)) : 0;
+  const minX = -overscan;
+  const maxX = width + overscan;
+  const minY = -overscan;
+  const maxY = height + overscan;
   const centerX = width / 2 + settings.gridOffsetX;
   const centerY = height / 2 + settings.gridOffsetY;
 
   const drawLines = (step: number, lineWidth: number, strokeStyle: string) => {
+    if (step < 2) {
+      return;
+    }
+
     context.save();
     context.lineWidth = lineWidth;
     context.strokeStyle = strokeStyle;
 
-    const startX = ((centerX % step) + step) % step;
-    for (let x = startX; x <= width; x += step) {
-      const snappedX = snapCoordinate(x, lineWidth);
+    const startX = minX + ((((centerX - minX) % step) + step) % step);
+    for (let x = startX; x <= maxX; x += step) {
+      const snappedX = snapCoordinate(x, lineWidth, !isRotated);
       context.beginPath();
-      context.moveTo(snappedX, 0);
-      context.lineTo(snappedX, height);
+      context.moveTo(snappedX, minY);
+      context.lineTo(snappedX, maxY);
       context.stroke();
     }
 
-    const startY = ((centerY % step) + step) % step;
-    for (let y = startY; y <= height; y += step) {
-      const snappedY = snapCoordinate(y, lineWidth);
+    const startY = minY + ((((centerY - minY) % step) + step) % step);
+    for (let y = startY; y <= maxY; y += step) {
+      const snappedY = snapCoordinate(y, lineWidth, !isRotated);
       context.beginPath();
-      context.moveTo(0, snappedY);
-      context.lineTo(width, snappedY);
+      context.moveTo(minX, snappedY);
+      context.lineTo(maxX, snappedY);
       context.stroke();
     }
 
     context.restore();
   };
 
-  drawLines(smallStep, normalizedLineWidth(settings.smallGridLineWidth), settings.smallGridColor);
-  drawLines(largeStep, normalizedLineWidth(settings.largeGridLineWidth), settings.largeGridColor);
+  context.save();
+  context.translate(width / 2, height / 2);
+  context.rotate(rotationRadians);
+  context.translate(-width / 2, -height / 2);
+
+  if (settings.showSmallGrid) {
+    drawLines(smallStep, normalizedLineWidth(settings.smallGridLineWidth), settings.smallGridColor);
+  }
+  if (settings.showLargeGrid) {
+    drawLines(largeStep, normalizedLineWidth(settings.largeGridLineWidth), settings.largeGridColor);
+  }
+
+  context.restore();
 }
 
 export function drawComposition(
@@ -135,7 +161,7 @@ export function drawComposition(
   const annotationOpacity = getMapOpacity(settings);
   drawAnnotations(context, belowGridAnnotations, annotationFilter, annotationOpacity, size);
 
-  if (settings.showGrid) {
+  if (settings.showSmallGrid || settings.showLargeGrid) {
     drawGrid(context, width, height, settings, source);
   }
 
