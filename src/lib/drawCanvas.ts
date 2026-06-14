@@ -20,13 +20,17 @@ function normalizedLineWidth(value: number): number {
   return Math.max(1, Math.round(value));
 }
 
-export function getMapColorFilter(settings: MapSettings): string {
+export function getMapAppearanceFilter(settings: MapSettings): string {
   return [
     `grayscale(${settings.mapGrayscale ? 100 : 0}%)`,
     `brightness(${Math.max(0, settings.mapBrightness)}%)`,
     `contrast(${Math.max(0, settings.mapContrast)}%)`,
     `saturate(${Math.max(0, settings.mapSaturation)}%)`,
   ].join(" ");
+}
+
+export function getSampledAnnotationFilter(settings: MapSettings): string {
+  return getMapAppearanceFilter(settings);
 }
 
 function fillCanvasBackground(context: CanvasRenderingContext2D, width: number, height: number): void {
@@ -49,7 +53,7 @@ function drawMapLayer(
 
   context.save();
   context.globalAlpha = applyOpacity ? Math.max(0, Math.min(100, settings.mapOpacity)) / 100 : 1;
-  context.filter = applyAppearance ? getMapColorFilter(settings) : "none";
+  context.filter = applyAppearance ? getMapAppearanceFilter(settings) : "none";
   context.translate(width / 2 + mapOffset.x, height / 2 + mapOffset.y);
   context.rotate((settings.rotation * Math.PI) / 180);
   context.drawImage(source.image, -mapDrawSize / 2, -mapDrawSize / 2, mapDrawSize, mapDrawSize);
@@ -123,14 +127,14 @@ export function drawComposition(
   fillCanvasBackground(context, width, height);
   drawMapLayer(context, width, height, settings, source, options.mapOffset);
 
-  const annotationFilter = getMapColorFilter(settings);
-  drawAnnotations(context, belowGridAnnotations, annotationFilter);
+  const annotationFilter = getSampledAnnotationFilter(settings);
+  drawAnnotations(context, belowGridAnnotations, annotationFilter, size);
 
   if (settings.showGrid) {
     drawGrid(context, width, height, settings, source);
   }
 
-  drawAnnotations(context, aboveGridAnnotations, annotationFilter);
+  drawAnnotations(context, aboveGridAnnotations, annotationFilter, size);
 
   return [...new Set(warnings)];
 }

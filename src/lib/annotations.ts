@@ -1,4 +1,4 @@
-import type { Annotation, AnnotationColorMode, AnnotationLayer, BrushAnnotation, LineAnnotation, PaintPoint, PaintStroke, RectAnnotation, TextAnnotation } from "../types/map";
+import type { Annotation, AnnotationColorMode, AnnotationLayer, BrushAnnotation, ExportSize, LineAnnotation, PaintPoint, PaintStroke, RectAnnotation, TextAnnotation } from "../types/map";
 
 function createId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -132,38 +132,63 @@ export function shouldAnnotationUseMapFilter(annotation: Annotation): boolean {
   return normalized.type !== "text" && normalized.colorMode === "sampled" && normalized.followMapAppearance;
 }
 
-export function drawAnnotations(context: CanvasRenderingContext2D, annotations: Annotation[], appearanceFilter: string): void {
+function drawAnnotationShape(context: CanvasRenderingContext2D, annotation: Annotation): void {
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.strokeStyle = annotation.baseColor;
+  context.fillStyle = annotation.baseColor;
+
+  if (annotation.type === "brush") {
+    for (const point of annotation.points) {
+      context.beginPath();
+      context.arc(point.x, point.y, annotation.size / 2, 0, Math.PI * 2);
+      context.fill();
+    }
+  } else if (annotation.type === "line") {
+    context.lineWidth = annotation.width;
+    context.beginPath();
+    context.moveTo(annotation.start.x, annotation.start.y);
+    context.lineTo(annotation.end.x, annotation.end.y);
+    context.stroke();
+  } else if (annotation.type === "rect") {
+    context.lineWidth = annotation.width;
+    context.strokeRect(annotation.x, annotation.y, annotation.widthPx, annotation.heightPx);
+  } else {
+    context.font = `${annotation.fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
+    context.textBaseline = "top";
+    context.fillText(annotation.text, annotation.x, annotation.y);
+  }
+}
+
+function drawFilteredAnnotation(context: CanvasRenderingContext2D, annotation: Annotation, appearanceFilter: string, size: ExportSize): void {
+  const layerCanvas = document.createElement("canvas");
+  layerCanvas.width = size.width;
+  layerCanvas.height = size.height;
+  const layerContext = layerCanvas.getContext("2d");
+  if (!layerContext) {
+    return;
+  }
+
+  drawAnnotationShape(layerContext, annotation);
+
+  context.save();
+  context.filter = appearanceFilter;
+  context.drawImage(layerCanvas, 0, 0);
+  context.restore();
+}
+
+export function drawAnnotations(context: CanvasRenderingContext2D, annotations: Annotation[], appearanceFilter: string, size: ExportSize): void {
   for (const annotation of annotations) {
     const normalizedAnnotation = normalizeAnnotationColor(annotation);
 
-    context.save();
-    context.filter = shouldAnnotationUseMapFilter(normalizedAnnotation) ? appearanceFilter : "none";
-    context.lineCap = "round";
-    context.lineJoin = "round";
-    context.strokeStyle = normalizedAnnotation.baseColor;
-    context.fillStyle = normalizedAnnotation.baseColor;
-
-    if (normalizedAnnotation.type === "brush") {
-      for (const point of normalizedAnnotation.points) {
-        context.beginPath();
-        context.arc(point.x, point.y, normalizedAnnotation.size / 2, 0, Math.PI * 2);
-        context.fill();
-      }
-    } else if (normalizedAnnotation.type === "line") {
-      context.lineWidth = normalizedAnnotation.width;
-      context.beginPath();
-      context.moveTo(normalizedAnnotation.start.x, normalizedAnnotation.start.y);
-      context.lineTo(normalizedAnnotation.end.x, normalizedAnnotation.end.y);
-      context.stroke();
-    } else if (normalizedAnnotation.type === "rect") {
-      context.lineWidth = normalizedAnnotation.width;
-      context.strokeRect(normalizedAnnotation.x, normalizedAnnotation.y, normalizedAnnotation.widthPx, normalizedAnnotation.heightPx);
-    } else {
-      context.font = `${normalizedAnnotation.fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
-      context.textBaseline = "top";
-      context.fillText(normalizedAnnotation.text, normalizedAnnotation.x, normalizedAnnotation.y);
+    if (shouldAnnotationUseMapFilter(normalizedAnnotation)) {
+      drawFilteredAnnotation(context, normalizedAnnotation, appearanceFilter, size);
+      continue;
     }
 
+    context.save();
+    context.filter = "none";
+    drawAnnotationShape(context, normalizedAnnotation);
     context.restore();
   }
 
