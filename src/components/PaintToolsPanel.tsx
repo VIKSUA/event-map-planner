@@ -1,6 +1,7 @@
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import BrushIcon from "@mui/icons-material/Brush";
 import UndoIcon from "@mui/icons-material/Undo";
-import { Box, Button, ButtonGroup, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { MapSettings, PaintMode } from "../types/map";
 import { MAX_PAINT_BRUSH_RADIUS, MAX_PAINT_SAMPLE_SIZE, MIN_PAINT_BRUSH_RADIUS, MIN_PAINT_SAMPLE_SIZE } from "../lib/mapConstants";
 
@@ -20,25 +21,49 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
   const clear = () => update("paintStrokes", []);
 
   return (
-    <Box className="status" sx={{ backgroundColor: "rgba(15, 23, 42, 0.9)" }}>
+    <Box
+      sx={{
+        border: "1px solid rgba(148, 163, 184, 0.6)",
+        borderRadius: 2,
+        backgroundColor: "rgba(255, 255, 255, 0.96)",
+        boxShadow: "0 20px 70px rgba(15, 23, 42, 0.24)",
+        backdropFilter: "blur(14px)",
+        color: "text.primary",
+        p: 1,
+      }}
+    >
       <Stack spacing={1}>
-        <Typography component="strong" sx={{ fontSize: 13 }}>
-          Paint tools
-        </Typography>
-        <ButtonGroup size="small" variant="outlined" fullWidth>
+        <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
+          <BrushIcon fontSize="small" />
+          <Typography component="strong" sx={{ fontSize: 13 }}>
+            Paint tools
+          </Typography>
+        </Stack>
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={settings.paintMode}
+          onChange={(_, value: PaintMode | null) => {
+            if (value) {
+              setMode(value);
+            }
+          }}
+          fullWidth
+          sx={{ "& .MuiToggleButton-root": { py: 0.35, fontSize: 11 } }}
+        >
           {(["off", "pick", "brush"] as PaintMode[]).map((mode) => (
-            <Button key={mode} variant={settings.paintMode === mode ? "contained" : "outlined"} onClick={() => setMode(mode)}>
+            <ToggleButton key={mode} value={mode}>
               {mode === "off" ? "Off" : mode === "pick" ? "Pick" : "Brush"}
-            </Button>
+            </ToggleButton>
           ))}
-        </ButtonGroup>
+        </ToggleButtonGroup>
         <TextField
           label="Color"
           type="color"
           size="small"
           value={settings.paintColor}
           onChange={(event) => update("paintColor", event.target.value)}
-          fullWidth
+          sx={{ maxWidth: 130 }}
           slotProps={{ inputLabel: { shrink: true }, htmlInput: { style: { height: 32, padding: 4 } } }}
         />
         <TextField

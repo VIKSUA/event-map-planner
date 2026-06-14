@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -6,6 +6,7 @@ import { Box, IconButton, Tooltip } from "@mui/material";
 
 interface SlideOutPanelProps {
   children: ReactNode;
+  collapsedIcon?: ElementType;
   defaultCollapsed?: boolean;
   expandSignal?: number;
   storageKey?: string;
@@ -14,7 +15,7 @@ interface SlideOutPanelProps {
 
 const HANDLE_WIDTH = 30;
 
-export function SlideOutPanel({ children, defaultCollapsed = false, expandSignal, storageKey, width = 360 }: SlideOutPanelProps) {
+export function SlideOutPanel({ children, collapsedIcon: CollapsedIcon, defaultCollapsed = false, expandSignal, storageKey, width = 360 }: SlideOutPanelProps) {
   const [collapsed, setCollapsed] = useState(() => {
     if (!storageKey) {
       return defaultCollapsed;
@@ -79,7 +80,7 @@ export function SlideOutPanel({ children, defaultCollapsed = false, expandSignal
             "&:hover": { background: "rgba(30, 41, 59, 0.94)" },
           }}
         >
-          {collapsed ? <ChevronLeftIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
+          {collapsed && CollapsedIcon ? <CollapsedIcon fontSize="small" /> : collapsed ? <ChevronLeftIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
         </IconButton>
       </Tooltip>
       {children}

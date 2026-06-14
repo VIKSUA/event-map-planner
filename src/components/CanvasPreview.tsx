@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import BrushIcon from "@mui/icons-material/Brush";
+import { Box } from "@mui/material";
 import type { ExportSize, MapSettings, MapSource, PaintPoint, PaintStroke } from "../types/map";
 import { drawComposition, renderMapOnlyCanvas } from "../lib/drawCanvas";
 import { getExportSize, getGridMetrics } from "../lib/mapMath";
@@ -17,7 +19,6 @@ interface CanvasPreviewProps {
   warnings: string[];
   onChange: (settings: MapSettings) => void;
   onPanEnd: (latitude: number, longitude: number) => void;
-  paintPanelSignal: number;
 }
 
 function fitSize(containerWidth: number, containerHeight: number, exportSize: ExportSize): ExportSize {
@@ -36,7 +37,7 @@ function formatMetric(value: number): string {
   return Number.isFinite(value) ? value.toFixed(3) : "n/a";
 }
 
-export function CanvasPreview({ settings, source, loading, error, warnings, onChange, onPanEnd, paintPanelSignal }: CanvasPreviewProps) {
+export function CanvasPreview({ settings, source, loading, error, warnings, onChange, onPanEnd }: CanvasPreviewProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentStrokeRef = useRef<PaintStroke | null>(null);
@@ -193,11 +194,21 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
           </div>
         )}
       </div>
-      <OverlayPanelStack>
-        <SlideOutPanel storageKey="map-background-exporter.paint-panel" defaultCollapsed expandSignal={paintPanelSignal} width={300}>
+      <Box
+        className="no-print"
+        sx={{
+          position: "absolute",
+          right: 16,
+          top: 80,
+          zIndex: 7,
+          pointerEvents: "none",
+        }}
+      >
+        <SlideOutPanel storageKey="map-background-exporter.paint-panel" collapsedIcon={BrushIcon} defaultCollapsed width={300}>
           <PaintToolsPanel settings={settings} onChange={onChange} />
         </SlideOutPanel>
-
+      </Box>
+      <OverlayPanelStack>
         {statusItems.length > 0 && (
           <SlideOutPanel storageKey="map-background-exporter.status-panel" width={360}>
             <div className="status-stack">
