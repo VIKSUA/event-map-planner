@@ -20,6 +20,12 @@ export class SavedLayoutsLimitError extends Error {
   }
 }
 
+export class SavedLayoutsImportError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 const SAVED_LAYOUTS_KEY = "map-background-exporter.saved-layouts";
 export const SAVED_LAYOUTS_LIMIT = 100;
 
@@ -70,6 +76,105 @@ export function loadSavedLayouts(): SavedLayout[] {
   } catch {
     return [];
   }
+}
+
+function sanitizeSnapshot(value: unknown): SavedLayoutSnapshot {
+  const rawSettings = typeof value === "object" && value !== null ? value : {};
+  return createSnapshot(
+    normalizeSettings({
+      ...DEFAULT_SETTINGS,
+      ...(rawSettings as Partial<MapSettings>),
+      apiKey: "",
+    } as MapSettings),
+  );
+}
+
+export function sanitizeSavedLayoutForExport(layout: SavedLayout): SavedLayout {
+  return {
+    ...layout,
+    schemaVersion: 1,
+    settings: sanitizeSnapshot(layout.settings),
+  };
+}
+
+export function serializeSavedLayoutForClipboard(layout: SavedLayout): string {
+  return JSON.stringify(sanitizeSavedLayoutForExport(layout), null, 2);
+}
+
+export function serializeSavedLayoutsForClipboard(layouts: SavedLayout[]): string {
+  return JSON.stringify(layouts.map(sanitizeSavedLayoutForExport), null, 2);
+}
+
+function importedLayoutCandidates(parsed: unknown): unknown[] {
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  if (typeof parsed === "object" && parsed !== null && Array.isArray((parsed as { layouts?: unknown }).layouts)) {
+    return (parsed as { layouts: unknown[] }).layouts;
+  }
+
+  return [parsed];
+}
+
+function normalizeImportedSavedLayout(value: unknown, usedIds: Set<string>, now: string): SavedLayout | null {
+  if (typeof value !== "object" || value === null || !("settings" in value)) {
+    return null;
+  }
+
+  const rawLayout = value as Partial<SavedLayout> & { settings?: unknown };
+  const settings = sanitizeSnapshot(rawLayout.settings);
+  const importedId = typeof rawLayout.id === "string" && rawLayout.id ? rawLayout.id : null;
+  const duplicateId = !importedId || usedIds.has(importedId);
+  const id = duplicateId ? createId() : importedId;
+  usedIds.add(id);
+
+  return {
+    id,
+    name: `${duplicateId ? "Imported " : ""}${typeof rawLayout.name === "string" && rawLayout.name.trim() ? rawLayout.name.trim() : createName({ ...DEFAULT_SETTINGS, ...settings })}`,
+    createdAt: typeof rawLayout.createdAt === "string" ? rawLayout.createdAt : now,
+    updatedAt: now,
+    schemaVersion: 1,
+    appVersion: typeof rawLayout.appVersion === "string" ? rawLayout.appVersion : undefined,
+    settings,
+  };
+}
+
+export function parseImportedSavedLayouts(rawText: string, existingLayouts: SavedLayout[] = loadSavedLayouts()): SavedLayout[] {
+  if (!rawText.trim()) {
+    throw new SavedLayoutsImportError("Paste saved map JSON first.");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawText);
+  } catch {
+    throw new SavedLayoutsImportError("Invalid JSON.");
+  }
+
+  const now = new Date().toISOString();
+  const usedIds = new Set(existingLayouts.map((layout) => layout.id));
+  const imported = importedLayoutCandidates(parsed)
+    .map((candidate) => normalizeImportedSavedLayout(candidate, usedIds, now))
+    .filter((layout): layout is SavedLayout => Boolean(layout));
+
+  if (imported.length === 0) {
+    throw new SavedLayoutsImportError("No valid saved maps found.");
+  }
+
+  return imported;
+}
+
+export function importSavedLayouts(rawText: string): { layouts: SavedLayout[]; importedCount: number } {
+  const existingLayouts = loadSavedLayouts();
+  const imported = parseImportedSavedLayouts(rawText, existingLayouts);
+  if (existingLayouts.length + imported.length > SAVED_LAYOUTS_LIMIT) {
+    throw new SavedLayoutsLimitError();
+  }
+
+  const layouts = [...imported, ...existingLayouts];
+  writeSavedLayouts(layouts);
+  return { layouts, importedCount: imported.length };
 }
 
 export function saveCurrentLayout(settings: MapSettings): SavedLayout {

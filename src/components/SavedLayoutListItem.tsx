@@ -1,3 +1,4 @@
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Box, Button, Card, CardContent, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import type { SavedLayout } from "../lib/savedLayouts";
@@ -12,12 +13,14 @@ export function SavedLayoutListItem({
   layout,
   onDelete,
   onLoad,
+  onCopy,
   onThumbnailRequestStart,
 }: {
   apiKey: string;
   layout: SavedLayout;
   onDelete: (id: string) => void;
   onLoad: (layout: SavedLayout) => void;
+  onCopy: (layout: SavedLayout) => void;
   onThumbnailRequestStart: () => void;
 }) {
   const settings = layout.settings;
@@ -45,6 +48,9 @@ export function SavedLayoutListItem({
           >
             <Button variant="contained" size="small" onClick={() => onLoad(layout)}>
               Load
+            </Button>
+            <Button variant="outlined" size="small" startIcon={<ContentCopyIcon />} onClick={() => onCopy(layout)}>
+              Copy
             </Button>
             <Tooltip title="Delete saved map">
               <IconButton aria-label="Delete saved map" size="small" color="error" onClick={() => onDelete(layout.id)}>

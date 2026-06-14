@@ -4,12 +4,16 @@ import type { AppearanceSettings, MapSettings } from "../types/map";
 import { getDefaultAppearanceForMode, resetAppearanceMode, updateActiveAppearance } from "../lib/appearancePresets";
 import {
   SavedLayoutsLimitError,
+  SavedLayoutsImportError,
   createSettingsFromSavedLayout,
   deleteSavedLayout,
   getSavedLayoutsStorageUsage,
+  importSavedLayouts,
   isQuotaExceededError,
   loadSavedLayouts,
   saveCurrentLayout,
+  serializeSavedLayoutForClipboard,
+  serializeSavedLayoutsForClipboard,
   type SavedLayout,
 } from "../lib/savedLayouts";
 import {
@@ -235,6 +239,43 @@ export function ControlPanel({
     setSavedLayoutsOpen(false);
     setMessage({ text: "Loaded", severity: "success" });
   };
+  const copyJsonToClipboard = async (json: string) => {
+    try {
+      await navigator.clipboard.writeText(json);
+      setMessage({ text: "Copied", severity: "success" });
+    } catch {
+      setMessage({ text: "Unable to copy JSON.", severity: "error" });
+    }
+  };
+  const handleCopySavedLayout = (layout: SavedLayout) => {
+    void copyJsonToClipboard(serializeSavedLayoutForClipboard(layout));
+  };
+  const handleCopyAllSavedLayouts = () => {
+    if (savedLayouts.length === 0) {
+      setMessage({ text: "No saved maps to copy.", severity: "error" });
+      return;
+    }
+
+    void copyJsonToClipboard(serializeSavedLayoutsForClipboard(savedLayouts));
+  };
+  const handleImportSavedLayouts = (rawText: string): boolean => {
+    try {
+      const result = importSavedLayouts(rawText);
+      setSavedLayouts(result.layouts);
+      setSavedLayoutsStorageUsage(getSavedLayoutsStorageUsage());
+      setMessage({ text: `Imported ${result.importedCount} ${result.importedCount === 1 ? "map" : "maps"}`, severity: "success" });
+      return true;
+    } catch (error) {
+      const text =
+        error instanceof SavedLayoutsImportError || error instanceof SavedLayoutsLimitError
+          ? error.message
+          : isQuotaExceededError(error)
+            ? "Not enough browser storage. Delete old saved maps first."
+            : "Unable to import saved maps.";
+      setMessage({ text, severity: "error" });
+      return false;
+    }
+  };
 
   return (
     <Box component="form" onSubmit={(event) => event.preventDefault()}>
@@ -283,7 +324,10 @@ export function ControlPanel({
       <SavedLayoutsDialog
         layouts={savedLayouts}
         onClose={() => setSavedLayoutsOpen(false)}
+        onCopyAll={handleCopyAllSavedLayouts}
+        onCopyLayout={handleCopySavedLayout}
         onDelete={handleDeleteSavedLayout}
+        onImport={handleImportSavedLayouts}
         onLoad={handleLoadSavedLayout}
         open={savedLayoutsOpen}
         apiKey={settings.apiKey}
