@@ -3,7 +3,7 @@ import type { MapSource } from "../types/map";
 const DEMO_SOURCE_PIXEL_SIZE = 1280;
 const DEMO_SOURCE_SCALE = 2;
 const DEMO_SOURCE_LOGICAL_SIZE = 640;
-const DEMO_MAP_URL = `${import.meta.env.BASE_URL}demo-map.svg`;
+const DEMO_MAP_URL = `${import.meta.env.BASE_URL}demo/default-map-preview.png`;
 
 let demoSourcePromise: Promise<MapSource> | null = null;
 
@@ -12,7 +12,8 @@ function loadDemoImage(): Promise<HTMLImageElement> {
     const image = new Image();
     image.decoding = "async";
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Unable to load built-in demo map."));
+    image.onerror = () =>
+      reject(new Error("Built-in demo map image is missing. Add a real satellite image at public/demo/default-map-preview.png or enter a Google API key."));
     image.src = DEMO_MAP_URL;
   });
 }
