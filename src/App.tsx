@@ -4,6 +4,7 @@ import { ControlPanel } from "./components/ControlPanel";
 import { DraggablePanel } from "./components/DraggablePanel";
 import { MapModeToggle } from "./components/MapModeToggle";
 import { setAppearanceMode } from "./lib/appearancePresets";
+import { fetchDemoMapSource } from "./lib/demoMapSource";
 import { downloadPng } from "./lib/download";
 import { fetchMapSource } from "./lib/googleStaticMap";
 import { getRequestCostByResolutionMode, useGoogleRequestCounter } from "./lib/googleRequestCounter";
@@ -52,9 +53,31 @@ export default function App() {
     let cancelled = false;
 
     if (!settings.apiKey.trim()) {
-      setSource(null);
+      setLoading(true);
       setError(null);
-      setWarnings([]);
+      fetchDemoMapSource()
+        .then((demoSource) => {
+          if (cancelled) {
+            return;
+          }
+
+          setSource(demoSource);
+          setWarnings(demoSource.warnings);
+        })
+        .catch((err: unknown) => {
+          if (cancelled) {
+            return;
+          }
+
+          setSource(null);
+          setWarnings([]);
+          setError(err instanceof Error ? err.message : "Unable to load demo map source.");
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
       return;
     }
 
