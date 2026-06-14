@@ -1,6 +1,7 @@
-import type { AppearanceMode, AppearanceSettings, DrawingLayer, MapSettings, PaintMode, PanelPosition } from "../types/map";
+import type { AnnotationColorMode, AppearanceMode, AppearanceSettings, DrawingLayer, MapSettings, PaintMode, PanelPosition } from "../types/map";
 import {
   DEFAULT_DRAWING_LAYER,
+  DEFAULT_PAINT_COLOR_MODE,
   DEFAULT_PAINT_MODE,
   DEFAULT_SHOW_DRAWINGS,
   MAX_GRID_LINE_WIDTH,
@@ -17,7 +18,7 @@ import {
   MIN_ZOOM,
 } from "./mapConstants";
 import { DEFAULT_APPEARANCE_BY_MODE, applyActiveAppearance } from "./appearancePresets";
-import { migratePaintStrokes, normalizeAnnotationLayer } from "./annotations";
+import { migratePaintStrokes, normalizeAnnotation } from "./annotations";
 import { DEFAULT_SETTINGS } from "./mapMath";
 
 const SETTINGS_KEY = "map-background-exporter.settings";
@@ -37,6 +38,10 @@ function isPaintMode(value: unknown): value is PaintMode {
 
 function isDrawingLayer(value: unknown): value is DrawingLayer {
   return value === "belowGrid" || value === "aboveGrid";
+}
+
+function isAnnotationColorMode(value: unknown): value is AnnotationColorMode {
+  return value === "sampled" || value === "manual";
 }
 
 function normalizeAppearance(appearance: AppearanceSettings): AppearanceSettings {
@@ -103,13 +108,14 @@ export function normalizeSettings(settings: MapSettings): MapSettings {
     zoom: clamp(Math.round(settings.zoom), MIN_ZOOM, MAX_ZOOM),
     scale: clamp(Math.round(settings.scale), MIN_SCALE, MAX_SCALE),
     paintMode: isPaintMode(settings.paintMode) ? settings.paintMode : DEFAULT_PAINT_MODE,
+    paintColorMode: isAnnotationColorMode(settings.paintColorMode) ? settings.paintColorMode : DEFAULT_PAINT_COLOR_MODE,
     paintBrushRadius: clamp(Math.round(settings.paintBrushRadius), MIN_PAINT_BRUSH_RADIUS, MAX_PAINT_BRUSH_RADIUS),
     paintSampleSize: clamp(Math.round(settings.paintSampleSize), MIN_PAINT_SAMPLE_SIZE, MAX_PAINT_SAMPLE_SIZE),
     showDrawings: typeof settings.showDrawings === "boolean" ? settings.showDrawings : DEFAULT_SHOW_DRAWINGS,
     drawingLayer: isDrawingLayer(settings.drawingLayer) ? settings.drawingLayer : DEFAULT_DRAWING_LAYER,
     annotations:
       Array.isArray(settings.annotations) && settings.annotations.length > 0
-        ? settings.annotations.map(normalizeAnnotationLayer)
+        ? settings.annotations.map(normalizeAnnotation)
         : migratePaintStrokes(Array.isArray(settings.paintStrokes) ? settings.paintStrokes : []),
     paintStrokes: Array.isArray(settings.paintStrokes) ? settings.paintStrokes : [],
     smallGridLineWidth: clamp(Math.round(settings.smallGridLineWidth), MIN_GRID_LINE_WIDTH, MAX_GRID_LINE_WIDTH),

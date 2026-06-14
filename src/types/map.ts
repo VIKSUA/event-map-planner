@@ -6,6 +6,7 @@ export type AppearanceMode = "screen" | "printBw";
 export type PaintMode = "pan" | "pick" | "brush" | "line" | "rect" | "text";
 export type AnnotationLayer = "belowGrid" | "aboveGrid";
 export type DrawingLayer = AnnotationLayer;
+export type AnnotationColorMode = "sampled" | "manual";
 
 export interface PaintPoint {
   x: number;
@@ -23,6 +24,9 @@ export interface BrushAnnotation {
   id: string;
   type: "brush";
   color: string;
+  baseColor: string;
+  colorMode: AnnotationColorMode;
+  followMapAppearance: boolean;
   layer: AnnotationLayer;
   size: number;
   points: PaintPoint[];
@@ -32,6 +36,9 @@ export interface LineAnnotation {
   id: string;
   type: "line";
   color: string;
+  baseColor: string;
+  colorMode: AnnotationColorMode;
+  followMapAppearance: boolean;
   layer: AnnotationLayer;
   width: number;
   start: PaintPoint;
@@ -42,6 +49,9 @@ export interface RectAnnotation {
   id: string;
   type: "rect";
   color: string;
+  baseColor: string;
+  colorMode: AnnotationColorMode;
+  followMapAppearance: boolean;
   layer: AnnotationLayer;
   width: number;
   x: number;
@@ -54,6 +64,9 @@ export interface TextAnnotation {
   id: string;
   type: "text";
   color: string;
+  baseColor: string;
+  colorMode: "manual";
+  followMapAppearance: false;
   layer: AnnotationLayer;
   fontSize: number;
   x: number;
@@ -108,6 +121,7 @@ export interface MapSettings {
   resolutionMode: ResolutionMode;
   paintMode: PaintMode;
   paintColor: string;
+  paintColorMode: AnnotationColorMode;
   paintBrushRadius: number;
   paintSampleSize: number;
   showDrawings: boolean;

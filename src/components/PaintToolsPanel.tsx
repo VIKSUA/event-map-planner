@@ -7,7 +7,7 @@ import ShowChartIcon from "@mui/icons-material/ShowChart";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import UndoIcon from "@mui/icons-material/Undo";
 import { Box, Button, Checkbox, FormControlLabel, InputAdornment, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
-import type { DrawingLayer, MapSettings, PaintMode } from "../types/map";
+import type { AnnotationColorMode, DrawingLayer, MapSettings, PaintMode } from "../types/map";
 import { MAX_PAINT_BRUSH_RADIUS, MAX_PAINT_SAMPLE_SIZE, MIN_PAINT_BRUSH_RADIUS, MIN_PAINT_SAMPLE_SIZE } from "../lib/mapConstants";
 
 function numericValue(value: string, fallback: number): number {
@@ -113,12 +113,40 @@ export function PaintToolsPanel({ settings, onChange }: { settings: MapSettings;
             </ToggleButton>
           </ToggleButtonGroup>
         </Stack>
+        <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
+          <Tooltip title="Color mode applies to new brush, line, and rectangle drawings only. Text stays fixed.">
+            <Typography sx={{ color: "text.secondary", fontSize: 12 }}>Color</Typography>
+          </Tooltip>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={settings.paintColorMode}
+            onChange={(_, value: AnnotationColorMode | null) => {
+              if (value) {
+                update("paintColorMode", value);
+              }
+            }}
+            aria-label="Annotation color mode"
+            sx={{ "& .MuiToggleButton-root": { px: 1, py: 0.25, fontSize: 11 } }}
+          >
+            <ToggleButton value="sampled">
+              <Tooltip title="Color follows map appearance filters.">
+                <span>Map color</span>
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="manual">
+              <Tooltip title="Color stays unchanged.">
+                <span>Fixed color</span>
+              </Tooltip>
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
         <TextField
           label="Color"
           type="color"
           size="small"
           value={settings.paintColor}
-          onChange={(event) => update("paintColor", event.target.value)}
+          onChange={(event) => onChange({ ...settings, paintColor: event.target.value, paintColorMode: "manual" })}
           sx={{ maxWidth: 130 }}
           slotProps={{ inputLabel: { shrink: true }, htmlInput: { style: { height: 32, padding: 4 } } }}
         />

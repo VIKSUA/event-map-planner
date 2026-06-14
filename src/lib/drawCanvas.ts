@@ -42,12 +42,13 @@ function drawMapLayer(
   settings: MapSettings,
   source: MapSource,
   mapOffset: { x: number; y: number } = { x: 0, y: 0 },
+  applyAppearance = true,
 ): void {
   const { mapDrawSize } = getMapDrawSize({ width, height }, settings);
 
   context.save();
   context.globalAlpha = Math.max(0, Math.min(100, settings.mapOpacity)) / 100;
-  context.filter = mapFilter(settings);
+  context.filter = applyAppearance ? mapFilter(settings) : "none";
   context.translate(width / 2 + mapOffset.x, height / 2 + mapOffset.y);
   context.rotate((settings.rotation * Math.PI) / 180);
   context.drawImage(source.image, -mapDrawSize / 2, -mapDrawSize / 2, mapDrawSize, mapDrawSize);
@@ -121,18 +122,18 @@ export function drawComposition(
   fillCanvasBackground(context, width, height);
   drawMapLayer(context, width, height, settings, source, options.mapOffset);
 
-  drawAnnotations(context, belowGridAnnotations);
+  drawAnnotations(context, belowGridAnnotations, settings);
 
   if (settings.showGrid) {
     drawGrid(context, width, height, settings, source);
   }
 
-  drawAnnotations(context, aboveGridAnnotations);
+  drawAnnotations(context, aboveGridAnnotations, settings);
 
   return [...new Set(warnings)];
 }
 
-export function renderMapOnlyCanvas(settings: MapSettings, source: MapSource, size: ExportSize): HTMLCanvasElement {
+export function renderMapOnlyCanvas(settings: MapSettings, source: MapSource, size: ExportSize, options: { applyAppearance?: boolean } = {}): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = size.width;
   canvas.height = size.height;
@@ -142,7 +143,7 @@ export function renderMapOnlyCanvas(settings: MapSettings, source: MapSource, si
   }
 
   fillCanvasBackground(context, size.width, size.height);
-  drawMapLayer(context, size.width, size.height, settings, source);
+  drawMapLayer(context, size.width, size.height, settings, source, undefined, options.applyAppearance ?? true);
   return canvas;
 }
 

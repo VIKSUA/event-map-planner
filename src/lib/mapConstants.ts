@@ -33,6 +33,7 @@ export const DEFAULT_SHOW_GRID = true;
 export const DEFAULT_RESOLUTION_MODE = "standard";
 export const DEFAULT_PAINT_MODE = "pan";
 export const DEFAULT_PAINT_COLOR = "#808080";
+export const DEFAULT_PAINT_COLOR_MODE = "manual";
 export const DEFAULT_PAINT_BRUSH_RADIUS = 20;
 export const DEFAULT_PAINT_SAMPLE_SIZE = 10;
 export const DEFAULT_SHOW_DRAWINGS = true;
