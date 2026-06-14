@@ -116,7 +116,7 @@ export function CanvasPreview({ settings, source, loading, error, warnings, onCh
     const point = getExportPoint(event);
     if (settings.paintMode === "pick") {
       try {
-        const mapCanvas = renderMapOnlyCanvas(settings, source, exportSize, { applyAppearance: false });
+        const mapCanvas = renderMapOnlyCanvas(settings, source, exportSize, { applyAppearance: false, applyOpacity: false });
         const context = mapCanvas.getContext("2d");
         const imageData = context?.getImageData(0, 0, mapCanvas.width, mapCanvas.height);
         const color = imageData ? sampleAverageColor(imageData, point.x, point.y, settings.paintSampleSize) : null;

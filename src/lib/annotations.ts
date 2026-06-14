@@ -1,4 +1,4 @@
-import type { Annotation, AnnotationColorMode, AnnotationLayer, AppearanceSettings, BrushAnnotation, LineAnnotation, PaintPoint, PaintStroke, RectAnnotation, TextAnnotation } from "../types/map";
+import type { Annotation, AnnotationColorMode, AnnotationLayer, BrushAnnotation, LineAnnotation, PaintPoint, PaintStroke, RectAnnotation, TextAnnotation } from "../types/map";
 
 function createId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -127,104 +127,45 @@ export function shouldAddBrushPoint(annotation: BrushAnnotation, point: PaintPoi
   return Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) >= minDistance;
 }
 
-function clampColorChannel(value: number): number {
-  return Math.min(255, Math.max(0, Math.round(value)));
-}
-
-function parseHexColor(color: string): { red: number; green: number; blue: number } | null {
-  const normalized = color.trim();
-  const shortHex = /^#([0-9a-f]{3})$/i.exec(normalized);
-  if (shortHex) {
-    const [red, green, blue] = shortHex[1].split("").map((value) => Number.parseInt(`${value}${value}`, 16));
-    return { red, green, blue };
-  }
-
-  const longHex = /^#([0-9a-f]{6})$/i.exec(normalized);
-  if (!longHex) {
-    return null;
-  }
-
-  return {
-    red: Number.parseInt(longHex[1].slice(0, 2), 16),
-    green: Number.parseInt(longHex[1].slice(2, 4), 16),
-    blue: Number.parseInt(longHex[1].slice(4, 6), 16),
-  };
-}
-
-function toHexColor(red: number, green: number, blue: number): string {
-  return `#${clampColorChannel(red).toString(16).padStart(2, "0")}${clampColorChannel(green).toString(16).padStart(2, "0")}${clampColorChannel(blue)
-    .toString(16)
-    .padStart(2, "0")}`;
-}
-
-export function applyAppearanceToColor(baseColor: string, appearance: Pick<AppearanceSettings, "mapGrayscale" | "mapBrightness" | "mapContrast" | "mapSaturation">): string {
-  const parsed = parseHexColor(baseColor);
-  if (!parsed) {
-    return baseColor;
-  }
-
-  let { red, green, blue } = parsed;
-  if (appearance.mapGrayscale) {
-    const gray = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-    red = gray;
-    green = gray;
-    blue = gray;
-  }
-
-  const brightness = Math.max(0, appearance.mapBrightness) / 100;
-  red *= brightness;
-  green *= brightness;
-  blue *= brightness;
-
-  const contrast = Math.max(0, appearance.mapContrast) / 100;
-  red = (red - 128) * contrast + 128;
-  green = (green - 128) * contrast + 128;
-  blue = (blue - 128) * contrast + 128;
-
-  const saturation = Math.max(0, appearance.mapSaturation) / 100;
-  const saturatedRed = (0.213 + 0.787 * saturation) * red + (0.715 - 0.715 * saturation) * green + (0.072 - 0.072 * saturation) * blue;
-  const saturatedGreen = (0.213 - 0.213 * saturation) * red + (0.715 + 0.285 * saturation) * green + (0.072 - 0.072 * saturation) * blue;
-  const saturatedBlue = (0.213 - 0.213 * saturation) * red + (0.715 - 0.715 * saturation) * green + (0.072 + 0.928 * saturation) * blue;
-
-  return toHexColor(saturatedRed, saturatedGreen, saturatedBlue);
-}
-
-export function resolveAnnotationRenderColor(annotation: Annotation, appearance: Pick<AppearanceSettings, "mapGrayscale" | "mapBrightness" | "mapContrast" | "mapSaturation">): string {
+export function shouldAnnotationUseMapFilter(annotation: Annotation): boolean {
   const normalized = normalizeAnnotationColor(annotation);
-  return normalized.followMapAppearance ? applyAppearanceToColor(normalized.baseColor, appearance) : normalized.baseColor;
+  return normalized.type !== "text" && normalized.colorMode === "sampled" && normalized.followMapAppearance;
 }
 
-export function drawAnnotations(context: CanvasRenderingContext2D, annotations: Annotation[], appearance: Pick<AppearanceSettings, "mapGrayscale" | "mapBrightness" | "mapContrast" | "mapSaturation">): void {
+export function drawAnnotations(context: CanvasRenderingContext2D, annotations: Annotation[], appearanceFilter: string): void {
   for (const annotation of annotations) {
-    const renderColor = resolveAnnotationRenderColor(annotation, appearance);
+    const normalizedAnnotation = normalizeAnnotationColor(annotation);
 
     context.save();
+    context.filter = shouldAnnotationUseMapFilter(normalizedAnnotation) ? appearanceFilter : "none";
     context.lineCap = "round";
     context.lineJoin = "round";
-    context.strokeStyle = renderColor;
-    context.fillStyle = renderColor;
+    context.strokeStyle = normalizedAnnotation.baseColor;
+    context.fillStyle = normalizedAnnotation.baseColor;
 
-    if (annotation.type === "brush") {
-      for (const point of annotation.points) {
+    if (normalizedAnnotation.type === "brush") {
+      for (const point of normalizedAnnotation.points) {
         context.beginPath();
-        context.arc(point.x, point.y, annotation.size / 2, 0, Math.PI * 2);
+        context.arc(point.x, point.y, normalizedAnnotation.size / 2, 0, Math.PI * 2);
         context.fill();
       }
-    } else if (annotation.type === "line") {
-      context.lineWidth = annotation.width;
+    } else if (normalizedAnnotation.type === "line") {
+      context.lineWidth = normalizedAnnotation.width;
       context.beginPath();
-      context.moveTo(annotation.start.x, annotation.start.y);
-      context.lineTo(annotation.end.x, annotation.end.y);
+      context.moveTo(normalizedAnnotation.start.x, normalizedAnnotation.start.y);
+      context.lineTo(normalizedAnnotation.end.x, normalizedAnnotation.end.y);
       context.stroke();
-    } else if (annotation.type === "rect") {
-      context.lineWidth = annotation.width;
-      context.strokeRect(annotation.x, annotation.y, annotation.widthPx, annotation.heightPx);
+    } else if (normalizedAnnotation.type === "rect") {
+      context.lineWidth = normalizedAnnotation.width;
+      context.strokeRect(normalizedAnnotation.x, normalizedAnnotation.y, normalizedAnnotation.widthPx, normalizedAnnotation.heightPx);
     } else {
-      context.font = `${annotation.fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
+      context.font = `${normalizedAnnotation.fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
       context.textBaseline = "top";
-      context.fillText(annotation.text, annotation.x, annotation.y);
+      context.fillText(normalizedAnnotation.text, normalizedAnnotation.x, normalizedAnnotation.y);
     }
 
     context.restore();
   }
+
+  context.filter = "none";
 }
